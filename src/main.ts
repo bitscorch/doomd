@@ -1,6 +1,7 @@
 import { Notice, Plugin, TFile, TFolder } from "obsidian";
 import { DEFAULT_SETTINGS, DoomdSettings, DoomdSettingTab } from "./settings";
 import { TaskStore } from "./store";
+import { CreateTaskModal, generateTaskContent, generateFilename, ensureFolder } from "./create";
 
 export default class DoomdPlugin extends Plugin {
 	settings: DoomdSettings;
@@ -54,6 +55,23 @@ export default class DoomdPlugin extends Plugin {
 				}
 			})
 		);
+
+		// Command: create task
+		this.addCommand({
+			id: "create-task",
+			name: "Create task",
+			callback: () => {
+				new CreateTaskModal(this.app, async (parsed, raw) => {
+					await ensureFolder(this.app, this.settings.tasksFolder);
+					const filename = generateFilename(parsed.title);
+					const path = `${this.settings.tasksFolder}/${filename}`;
+					const content = generateTaskContent(parsed, raw);
+					const file = await this.app.vault.create(path, content);
+					new Notice(`Task created: ${parsed.title}`);
+					await this.app.workspace.getLeaf(false).openFile(file);
+				}).open();
+			},
+		});
 
 		// Command: list all tasks (debug)
 		this.addCommand({
