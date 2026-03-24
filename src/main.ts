@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, DoomdSettings, DoomdSettingTab } from "./settings";
 import { TaskStore } from "./store";
 import { CreateTaskModal, generateTaskContent, generateFilename, ensureFolder } from "./create";
 import { createDoomdAutocomplete } from "./autocomplete";
+import { registerDoomdViews } from "./views/register";
 
 export default class DoomdPlugin extends Plugin {
 	settings: DoomdSettings;
@@ -11,6 +12,9 @@ export default class DoomdPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.store = new TaskStore(this.app, this.settings.tasksFolder);
+
+		// Register Bases views
+		registerDoomdViews(this);
 
 		// Load tasks when layout is ready
 		this.app.workspace.onLayoutReady(async () => {
