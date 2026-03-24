@@ -114,7 +114,7 @@ export function sanitizeFilename(title: string): string {
 }
 
 export function generateFilename(title: string): string {
-	const date = moment().format("YYYY-MM-DD-HHmm");
+	const date = moment().format("YYYY-MM-DD-HHmmss");
 	const name = sanitizeFilename(title);
 	return `${date} - ${name}.md`;
 }
