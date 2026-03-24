@@ -1,0 +1,10 @@
+{
+	"id": "doomd",
+	"name": "doomd",
+	"version": "0.1.0",
+	"minAppVersion": "1.10.1",
+	"description": "File-based task management with kanban, calendar, and list views.",
+	"author": "bitscorch",
+	"authorUrl": "https://github.com/bitscorch",
+	"isDesktopOnly": false
+}
