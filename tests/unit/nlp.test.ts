@@ -96,27 +96,33 @@ describe("parseTaskInput", () => {
 	});
 
 	describe("date extraction", () => {
-		it("extracts 'tomorrow' as due date", () => {
+		it("extracts 'tomorrow' as all-day", () => {
 			const result = parseTaskInput("Buy groceries tomorrow");
-			expect(result.due).not.toBeNull();
+			expect(result.start).not.toBeNull();
+			expect(result.allDay).toBe(true);
+			expect(result.end).toBeNull();
 			expect(result.title).toBe("Buy groceries");
 		});
 
-		it("extracts 'tomorrow at 3pm' as due date with time", () => {
+		it("extracts 'tomorrow at 3pm' as timed with 30min default end", () => {
 			const result = parseTaskInput("Buy groceries tomorrow at 3pm");
-			expect(result.due).not.toBeNull();
-			expect(result.due).toContain("15:00");
+			expect(result.start).not.toBeNull();
+			expect(result.start).toContain("15:00");
+			expect(result.end).not.toBeNull();
+			expect(result.end).toContain("15:30");
+			expect(result.allDay).toBe(false);
 			expect(result.title).toBe("Buy groceries");
 		});
 
-		it("returns null due when no date", () => {
+		it("returns null start when no date", () => {
 			const result = parseTaskInput("Buy groceries");
-			expect(result.due).toBeNull();
+			expect(result.start).toBeNull();
+			expect(result.end).toBeNull();
 		});
 
 		it("strips date text from title", () => {
 			const result = parseTaskInput("Meeting next friday at 2pm");
-			expect(result.due).not.toBeNull();
+			expect(result.start).not.toBeNull();
 			expect(result.title).not.toContain("next friday");
 			expect(result.title).not.toContain("at 2pm");
 		});
@@ -129,7 +135,8 @@ describe("parseTaskInput", () => {
 			expect(result.projects).toEqual(["[[Shopping]]"]);
 			expect(result.tags).toEqual(["errands"]);
 			expect(result.contexts).toEqual(["home"]);
-			expect(result.due).not.toBeNull();
+			expect(result.start).not.toBeNull();
+			expect(result.end).not.toBeNull();
 		});
 
 		it("handles empty input", () => {
@@ -138,7 +145,8 @@ describe("parseTaskInput", () => {
 			expect(result.projects).toEqual([]);
 			expect(result.tags).toEqual([]);
 			expect(result.contexts).toEqual([]);
-			expect(result.due).toBeNull();
+			expect(result.start).toBeNull();
+			expect(result.end).toBeNull();
 		});
 	});
 });

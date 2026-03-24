@@ -47,14 +47,20 @@ describe("parseTask", () => {
 		expect(task.projects).toEqual([]);
 	});
 
-	it("parses due date", () => {
-		const task = parseTask("task/test.md", { due: "2026-03-25T15:00:00+02:00" }, "# Task");
-		expect(task.due).toBe("2026-03-25T15:00:00+02:00");
+	it("parses start date", () => {
+		const task = parseTask("task/test.md", { start: "2026-03-25T15:00:00+02:00" }, "# Task");
+		expect(task.start).toBe("2026-03-25T15:00:00+02:00");
 	});
 
-	it("returns null due when missing", () => {
+	it("parses end date", () => {
+		const task = parseTask("task/test.md", { end: "2026-03-25T15:30:00+02:00" }, "# Task");
+		expect(task.end).toBe("2026-03-25T15:30:00+02:00");
+	});
+
+	it("returns null start/end when missing", () => {
 		const task = parseTask("task/test.md", {}, "# Task");
-		expect(task.due).toBeNull();
+		expect(task.start).toBeNull();
+		expect(task.end).toBeNull();
 	});
 
 	it("parses recurrence", () => {
