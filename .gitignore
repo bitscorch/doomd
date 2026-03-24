@@ -20,3 +20,12 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# e2e
+.obsidian-unpacked
+.obsidian-config-e2e
+e2e-vault
+test-results
+
+# build
+package-lock.json

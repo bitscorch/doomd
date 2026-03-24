@@ -18,7 +18,7 @@ interface AutocompleteConfig {
 function isBoundary(text: string, index: number): boolean {
 	if (index === -1) return false;
 	if (index === 0) return true;
-	const prev = text[index - 1];
+	const prev = text[index - 1] ?? "";
 	return !/\w/.test(prev);
 }
 
