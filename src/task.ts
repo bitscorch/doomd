@@ -4,8 +4,8 @@ export interface Task {
 	status: string;
 	priority: string;
 	projects: string[];
-	due: string | null;
-	scheduled: string | null;
+	start: string | null;
+	end: string | null;
 	recurrence: string | null;
 	tags: string[];
 	dateCreated: string | null;
@@ -20,8 +20,8 @@ export function parseTask(filePath: string, frontmatter: Record<string, unknown>
 		status: (frontmatter.status as string) ?? "inbox",
 		priority: (frontmatter.priority as string) ?? "normal",
 		projects: toStringArray(frontmatter.projects),
-		due: (frontmatter.due as string) ?? null,
-		scheduled: (frontmatter.scheduled as string) ?? null,
+		start: (frontmatter.start as string) ?? null,
+		end: (frontmatter.end as string) ?? null,
 		recurrence: (frontmatter.recurrence as string) ?? null,
 		tags: toStringArray(frontmatter.tags),
 		dateCreated: (frontmatter.dateCreated as string) ?? null,
