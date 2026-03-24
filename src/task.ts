@@ -32,7 +32,7 @@ export function parseTask(filePath: string, frontmatter: Record<string, unknown>
 
 function extractH1(body: string): string | null {
 	const match = body.match(/^#\s+(.+)$/m);
-	return match ? match[1].trim() : null;
+	return match && match[1] ? match[1].trim() : null;
 }
 
 function toStringArray(value: unknown): string[] {

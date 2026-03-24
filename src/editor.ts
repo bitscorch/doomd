@@ -1,4 +1,6 @@
 import { App, Constructor, Scope, TFile } from "obsidian";
+
+declare const app: App;
 import { EditorSelection, Extension, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder, ViewUpdate, tooltips } from "@codemirror/view";
 import { around } from "monkey-around";

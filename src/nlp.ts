@@ -18,7 +18,7 @@ export function parseTaskInput(input: string): ParsedTask {
 
 	// Extract +[[project]] or +project
 	const projectWikiRegex = /\+\[\[([^\]]+)\]\]/g;
-	let match;
+	let match: RegExpExecArray | null;
 	while ((match = projectWikiRegex.exec(input)) !== null) {
 		projects.push(`[[${match[1]}]]`);
 	}
@@ -26,31 +26,30 @@ export function parseTaskInput(input: string): ParsedTask {
 
 	const projectPlainRegex = /\+(\S+)/g;
 	while ((match = projectPlainRegex.exec(title)) !== null) {
-		projects.push(match[1]);
+		projects.push(match[1]!);
 	}
 	title = title.replace(projectPlainRegex, "");
 
 	// Extract #tag
 	const tagRegex = /#(\S+)/g;
 	while ((match = tagRegex.exec(title)) !== null) {
-		tags.push(match[1]);
+		tags.push(match[1]!);
 	}
 	title = title.replace(tagRegex, "");
 
 	// Extract @context
 	const contextRegex = /@(\S+)/g;
 	while ((match = contextRegex.exec(title)) !== null) {
-		contexts.push(match[1]);
+		contexts.push(match[1]!);
 	}
 	title = title.replace(contextRegex, "");
 
 	// Parse date/time with chrono-node
 	let due: string | null = null;
 	const parsed = chrono.parse(title);
-	if (parsed.length > 0) {
+	if (parsed.length > 0 && parsed[0]) {
 		const result = parsed[0];
 		due = moment(result.start.date()).format("YYYY-MM-DDTHH:mm:ssZ");
-		// Remove the date text from the title
 		title = title.slice(0, result.index) + title.slice(result.index + result.text.length);
 	}
 
