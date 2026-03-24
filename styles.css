@@ -1,8 +1,23 @@
-/*
+.doomd-create-modal {
+	padding: 1em;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.doomd-create-modal h3 {
+	margin-top: 0;
+	margin-bottom: 0.5em;
+}
 
-If your plugin does not need CSS, delete this file.
+.doomd-editor-container {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px;
+	min-height: 3em;
+}
 
-*/
+.doomd-editor-container .cm-editor {
+	background: transparent;
+}
+
+.doomd-editor-container .cm-content {
+	min-height: 2em;
+}

@@ -16,7 +16,7 @@ export interface Task {
 export function parseTask(filePath: string, frontmatter: Record<string, unknown>, body: string): Task {
 	return {
 		filePath,
-		title: (frontmatter.title as string) ?? extractH1(body) ?? filePath.split("/").pop()?.replace(".md", "") ?? "",
+		title: extractH1(body) ?? filePath.split("/").pop()?.replace(".md", "") ?? "",
 		status: (frontmatter.status as string) ?? "inbox",
 		priority: (frontmatter.priority as string) ?? "normal",
 		projects: toStringArray(frontmatter.projects),
