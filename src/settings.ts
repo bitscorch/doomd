@@ -3,10 +3,12 @@ import DoomdPlugin from "./main";
 
 export interface DoomdSettings {
 	tasksFolder: string;
+	projectsFolder: string;
 }
 
 export const DEFAULT_SETTINGS: DoomdSettings = {
 	tasksFolder: "task",
+	projectsFolder: "proj",
 };
 
 export class DoomdSettingTab extends PluginSettingTab {
@@ -30,6 +32,19 @@ export class DoomdSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.tasksFolder)
 					.onChange(async (value) => {
 						this.plugin.settings.tasksFolder = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Projects folder")
+			.setDesc("Folder to suggest projects from when using + trigger")
+			.addText((text) =>
+				text
+					.setPlaceholder("proj")
+					.setValue(this.plugin.settings.projectsFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.projectsFolder = value;
 						await this.plugin.saveSettings();
 					})
 			);

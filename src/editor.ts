@@ -49,6 +49,7 @@ export interface EmbeddableEditorOptions {
 	value?: string;
 	cls?: string;
 	placeholder?: string;
+	extensions?: Extension[];
 	onSubmit?: (editor: EmbeddableEditor) => void;
 	onEscape?: (editor: EmbeddableEditor) => void;
 	onChange?: (value: string) => void;
@@ -126,6 +127,10 @@ export class EmbeddableEditor extends resolveEditorPrototype(app) {
 
 		if (this.options.placeholder) {
 			extensions.push(placeholder(this.options.placeholder));
+		}
+
+		if (this.options.extensions?.length) {
+			extensions.push(...this.options.extensions);
 		}
 
 		extensions.push(

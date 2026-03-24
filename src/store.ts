@@ -69,6 +69,18 @@ export class TaskStore {
 		);
 	}
 
+	getAllContexts(): string[] {
+		const contexts = new Set<string>();
+		for (const task of this.tasks.values()) {
+			const fm = this.app.metadataCache.getCache(task.filePath)?.frontmatter;
+			const taskContexts = fm?.contexts;
+			if (Array.isArray(taskContexts)) {
+				taskContexts.forEach((c: string) => contexts.add(c));
+			}
+		}
+		return Array.from(contexts);
+	}
+
 	async updateTaskField(filePath: string, field: string, value: string): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!(file instanceof TFile)) return;

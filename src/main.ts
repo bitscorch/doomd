@@ -2,6 +2,7 @@ import { Notice, Plugin, TFile, TFolder } from "obsidian";
 import { DEFAULT_SETTINGS, DoomdSettings, DoomdSettingTab } from "./settings";
 import { TaskStore } from "./store";
 import { CreateTaskModal, generateTaskContent, generateFilename, ensureFolder } from "./create";
+import { createDoomdAutocomplete } from "./autocomplete";
 
 export default class DoomdPlugin extends Plugin {
 	settings: DoomdSettings;
@@ -61,7 +62,10 @@ export default class DoomdPlugin extends Plugin {
 			id: "create-task",
 			name: "Create task",
 			callback: () => {
-				new CreateTaskModal(this.app, async (parsed, raw) => {
+				const extensions = createDoomdAutocomplete({
+					store: this.store,
+				});
+				new CreateTaskModal(this.app, extensions, async (parsed, raw) => {
 					await ensureFolder(this.app, this.settings.tasksFolder);
 					const filename = generateFilename(parsed.title);
 					const path = `${this.settings.tasksFolder}/${filename}`;

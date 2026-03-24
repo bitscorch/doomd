@@ -1,13 +1,16 @@
 import { App, Modal, moment } from "obsidian";
+import { Extension } from "@codemirror/state";
 import { EmbeddableEditor } from "./editor";
 import { ParsedTask, parseTaskInput } from "./nlp";
 
 export class CreateTaskModal extends Modal {
 	private editor: EmbeddableEditor | null = null;
 	private onSubmit: (parsed: ParsedTask, raw: string) => void;
+	private extensions: Extension[];
 
-	constructor(app: App, onSubmit: (parsed: ParsedTask, raw: string) => void) {
+	constructor(app: App, extensions: Extension[], onSubmit: (parsed: ParsedTask, raw: string) => void) {
 		super(app);
+		this.extensions = extensions;
 		this.onSubmit = onSubmit;
 	}
 
@@ -22,6 +25,7 @@ export class CreateTaskModal extends Modal {
 		this.editor = new EmbeddableEditor(this.app, editorContainer, {
 			placeholder: "Buy groceries tomorrow at 3pm @home #errands +[[Project]]",
 			cls: "doomd-task-input",
+			extensions: this.extensions,
 			onSubmit: () => this.submit(),
 			onEscape: () => this.close(),
 		});
@@ -46,7 +50,7 @@ export class CreateTaskModal extends Modal {
 }
 
 export function generateTaskContent(parsed: ParsedTask, raw: string): string {
-	const now = moment().format("YYYY-MM-DDTHH:mm:ss");
+	const now = moment().format("YYYY-MM-DDTHH:mm:ssZ");
 
 	const lines = [
 		"---",
@@ -64,8 +68,13 @@ export function generateTaskContent(parsed: ParsedTask, raw: string): string {
 		lines.push("projects: []");
 	}
 
-	lines.push("due:");
-	lines.push("scheduled:");
+	// Due date
+	if (parsed.due) {
+		lines.push(`due: ${parsed.due}`);
+	} else {
+		lines.push("due:");
+	}
+
 	lines.push("recurrence:");
 
 	// Tags

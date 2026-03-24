@@ -1,8 +1,12 @@
+import * as chrono from "chrono-node";
+import { moment } from "obsidian";
+
 export interface ParsedTask {
 	title: string;
 	projects: string[];
 	tags: string[];
 	contexts: string[];
+	due: string | null;
 }
 
 export function parseTaskInput(input: string): ParsedTask {
@@ -40,8 +44,18 @@ export function parseTaskInput(input: string): ParsedTask {
 	}
 	title = title.replace(contextRegex, "");
 
+	// Parse date/time with chrono-node
+	let due: string | null = null;
+	const parsed = chrono.parse(title);
+	if (parsed.length > 0) {
+		const result = parsed[0];
+		due = moment(result.start.date()).format("YYYY-MM-DDTHH:mm:ssZ");
+		// Remove the date text from the title
+		title = title.slice(0, result.index) + title.slice(result.index + result.text.length);
+	}
+
 	// Clean up title
 	title = title.replace(/\s+/g, " ").trim();
 
-	return { title, projects, tags, contexts };
+	return { title, projects, tags, contexts, due };
 }
