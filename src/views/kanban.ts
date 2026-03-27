@@ -3,7 +3,7 @@ import { renderTaskCard } from "./card";
 import { EditTaskModal } from "./edit-modal";
 import DoomdPlugin from "../main";
 
-const STATUS_ORDER = ["inbox", "next", "active", "waiting", "someday", "done"];
+const STATUS_ORDER = ["inbox", "next", "active", "done", "waiting", "someday"];
 const KANBAN_HIDDEN = new Set(["event", "meeting", "cancelled"]);
 
 export class KanbanView extends BasesView {
