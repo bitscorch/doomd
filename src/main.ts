@@ -69,7 +69,7 @@ export default class DoomdPlugin extends Plugin {
 				const extensions = createDoomdAutocomplete({
 					store: this.store,
 				});
-				new CreateTaskModal(this.app, extensions, async (data) => {
+				new CreateTaskModal(this.app, extensions, this.store, async (data) => {
 					await ensureFolder(this.app, this.settings.tasksFolder);
 					const filename = generateFilename(data.raw);
 					const path = `${this.settings.tasksFolder}/${filename}`;
