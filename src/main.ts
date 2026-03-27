@@ -17,26 +17,26 @@ export default class DoomdPlugin extends Plugin {
 		registerDoomdViews(this);
 
 		// Load tasks when layout is ready
-		this.app.workspace.onLayoutReady(async () => {
-			await this.store.loadAll();
+		this.app.workspace.onLayoutReady(() => {
+			this.store.loadAll();
 			console.log(`[doomd] Loaded ${this.store.getAll().length} tasks`);
 		});
 
 		// Watch for file changes in tasks folder
 		this.registerEvent(
-			this.app.vault.on("modify", async (file) => {
+			this.app.vault.on("modify", (file) => {
 				if (file instanceof TFile && file.path.startsWith(this.settings.tasksFolder)) {
-					await this.store.loadTask(file);
+					this.store.indexTask(file);
 				}
 			})
 		);
 
 		this.registerEvent(
-			this.app.vault.on("create", async (file) => {
+			this.app.vault.on("create", (file) => {
 				if (file instanceof TFile && file.path.startsWith(this.settings.tasksFolder)) {
 					// Small delay to let metadata cache populate
-					setTimeout(async () => {
-						await this.store.loadTask(file);
+					setTimeout(() => {
+						if (file instanceof TFile) this.store.indexTask(file);
 					}, 200);
 				}
 			})
@@ -51,12 +51,12 @@ export default class DoomdPlugin extends Plugin {
 		);
 
 		this.registerEvent(
-			this.app.vault.on("rename", async (file, oldPath) => {
+			this.app.vault.on("rename", (file, oldPath) => {
 				if (oldPath.startsWith(this.settings.tasksFolder)) {
 					this.store.removeTask(oldPath);
 				}
 				if (file instanceof TFile && file.path.startsWith(this.settings.tasksFolder)) {
-					await this.store.loadTask(file);
+					this.store.indexTask(file);
 				}
 			})
 		);
