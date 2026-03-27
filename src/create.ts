@@ -1,7 +1,8 @@
-import { App, Menu, Modal, moment, setIcon } from "obsidian";
+import { AbstractInputSuggest, App, Menu, Modal, moment, setIcon } from "obsidian";
 import { Extension } from "@codemirror/state";
 import { EmbeddableEditor } from "./editor";
 import { ParsedTask, parseTaskInput } from "./nlp";
+import { TaskStore } from "./store";
 
 export interface TaskFormData {
 	parsed: ParsedTask;
@@ -11,6 +12,7 @@ export interface TaskFormData {
 	startOverride: string | null;
 	endOverride: string | null;
 	recurrenceOverride: string | null;
+	parentOverride: string | null;
 }
 
 export class CreateTaskModal extends Modal {
@@ -33,6 +35,7 @@ export class CreateTaskModal extends Modal {
 	private startOverride: string | null = null;
 	private endOverride: string | null = null;
 	private recurrenceOverride: string | null = null;
+	private parentOverride: string | null = null;
 
 	// Detail inputs
 	private statusSelect: HTMLSelectElement | null = null;
@@ -40,10 +43,14 @@ export class CreateTaskModal extends Modal {
 	private startTimeInput: HTMLInputElement | null = null;
 	private endTimeInput: HTMLInputElement | null = null;
 	private recurrenceInput: HTMLInputElement | null = null;
+	private parentInput: HTMLInputElement | null = null;
 
-	constructor(app: App, extensions: Extension[], onSubmit: (data: TaskFormData) => void) {
+	private store: TaskStore;
+
+	constructor(app: App, extensions: Extension[], store: TaskStore, onSubmit: (data: TaskFormData) => void) {
 		super(app);
 		this.extensions = extensions;
+		this.store = store;
 		this.onSubmit = onSubmit;
 	}
 
@@ -239,6 +246,18 @@ export class CreateTaskModal extends Modal {
 			this.recurrenceOverride = this.recurrenceInput!.value || null;
 			this.updatePreview();
 		});
+
+		// Parent
+		const parentField = this.detailsEl.createDiv({ cls: "doomd-field" });
+		parentField.createEl("span", { text: "Parent", cls: "doomd-field-label" });
+		this.parentInput = parentField.createEl("input", {
+			type: "text",
+			placeholder: "Search for parent task...",
+		});
+		new TaskSuggest(this.app, this.parentInput, this.store, (value) => {
+			this.parentOverride = value || null;
+			this.updatePreview();
+		});
 	}
 
 	private rebuildFromForm() {
@@ -326,6 +345,11 @@ export class CreateTaskModal extends Modal {
 			this.addPreviewItem("repeat", `Recurrence: ${this.recurrenceOverride}`);
 		}
 
+		// Parent
+		if (this.parentOverride) {
+			this.addPreviewItem("list-tree", `Parent: ${this.parentOverride}`);
+		}
+
 		// Description
 		const lines = text.split("\n");
 		if (lines.length > 1 && lines.slice(1).some((l) => l.trim())) {
@@ -359,6 +383,7 @@ export class CreateTaskModal extends Modal {
 			startOverride: this.startOverride,
 			endOverride: this.endOverride,
 			recurrenceOverride: this.recurrenceOverride,
+			parentOverride: this.parentOverride,
 		});
 		this.close();
 	}
@@ -449,10 +474,41 @@ class DateTimePickerModal extends Modal {
 	}
 }
 
+// --- Task Suggest ---
+class TaskSuggest extends AbstractInputSuggest<{ title: string; link: string }> {
+	private store: TaskStore;
+	private onPick: (value: string) => void;
+
+	constructor(app: App, inputEl: HTMLInputElement, store: TaskStore, onPick: (value: string) => void) {
+		super(app, inputEl);
+		this.store = store;
+		this.onPick = onPick;
+	}
+
+	getSuggestions(query: string): { title: string; link: string }[] {
+		const lower = query.toLowerCase();
+		return this.store
+			.getAll()
+			.map((t) => ({ title: t.title, link: `[[${t.title}]]` }))
+			.filter((t) => t.title.toLowerCase().includes(lower))
+			.slice(0, 20);
+	}
+
+	renderSuggestion(item: { title: string; link: string }, el: HTMLElement): void {
+		el.setText(item.title);
+	}
+
+	selectSuggestion(item: { title: string; link: string }, _evt: MouseEvent | KeyboardEvent): void {
+		this.setValue(item.link);
+		this.onPick(item.link);
+		this.close();
+	}
+}
+
 // --- Helpers ---
 export function generateTaskContent(data: TaskFormData): string {
 	const now = moment().format("YYYY-MM-DDTHH:mm:ssZ");
-	const { parsed, raw, description, statusOverride, startOverride, endOverride, recurrenceOverride } = data;
+	const { parsed, raw, description, statusOverride, startOverride, endOverride, recurrenceOverride, parentOverride } = data;
 
 	const lines = [
 		"---",
@@ -487,6 +543,10 @@ export function generateTaskContent(data: TaskFormData): string {
 		lines.push(`recurrence: "${recurrenceOverride}"`);
 	} else {
 		lines.push("recurrence:");
+	}
+
+	if (parentOverride) {
+		lines.push(`parent: "${parentOverride}"`);
 	}
 
 	if (parsed.tags.length > 0) {

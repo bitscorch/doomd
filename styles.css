@@ -357,6 +357,159 @@
 	overflow: hidden;
 }
 
+/* Tree */
+.doomd-tree {
+	padding: 12px;
+}
+
+.doomd-tree-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 24px;
+	text-align: center;
+}
+
+.doomd-tree-list,
+.doomd-tree-children {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.doomd-tree-children {
+	padding-left: 20px;
+}
+
+.doomd-tree-children.hidden {
+	display: none;
+}
+
+.doomd-tree-node {
+	margin: 0;
+}
+
+.doomd-tree-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 6px;
+	border-radius: 4px;
+	transition: background 0.1s ease;
+}
+
+.doomd-tree-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.doomd-tree-toggle,
+.doomd-tree-toggle-spacer {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.doomd-tree-toggle {
+	cursor: pointer;
+	border-radius: 3px;
+	color: var(--text-faint);
+}
+
+.doomd-tree-toggle:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-border);
+}
+
+.doomd-tree-toggle svg {
+	width: 14px;
+	height: 14px;
+}
+
+.doomd-tree-status {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+}
+
+.doomd-tree-status svg {
+	width: 14px;
+	height: 14px;
+}
+
+.doomd-tree-status-inbox .doomd-tree-status { color: var(--text-muted); }
+.doomd-tree-status-next .doomd-tree-status { color: var(--interactive-accent); }
+.doomd-tree-status-active .doomd-tree-status { color: var(--color-green); }
+.doomd-tree-status-waiting .doomd-tree-status { color: var(--color-yellow); }
+.doomd-tree-status-someday .doomd-tree-status { color: var(--color-purple); }
+.doomd-tree-status-done .doomd-tree-status { color: var(--text-faint); }
+
+.doomd-tree-title {
+	flex: 1;
+	cursor: pointer;
+	font-size: 0.9em;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.doomd-tree-title:hover {
+	color: var(--interactive-accent);
+}
+
+.doomd-tree-status-done .doomd-tree-title {
+	color: var(--text-faint);
+	text-decoration: line-through;
+}
+
+.doomd-tree-status-label {
+	flex-shrink: 0;
+	font-size: 0.7em;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: var(--background-modifier-border);
+}
+
+/* Checkbox rows */
+.doomd-tree-checkbox {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+}
+
+.doomd-tree-checkbox svg {
+	width: 14px;
+	height: 14px;
+}
+
+.doomd-tree-checkbox.checked {
+	color: var(--text-faint);
+}
+
+.doomd-tree-checkbox-text {
+	flex: 1;
+	font-size: 0.85em;
+	line-height: 1.4;
+}
+
+.doomd-tree-checkbox-text.checked {
+	color: var(--text-faint);
+	text-decoration: line-through;
+}
+
 /* Button bar */
 .doomd-button-bar {
 	display: flex;

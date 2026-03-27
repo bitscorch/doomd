@@ -7,6 +7,7 @@ export interface Task {
 	start: string | null;
 	end: string | null;
 	recurrence: string | null;
+	parent: string | null;
 	tags: string[];
 	dateCreated: string | null;
 	dateModified: string | null;
@@ -23,6 +24,7 @@ export function parseTask(filePath: string, frontmatter: Record<string, unknown>
 		start: (frontmatter.start as string) ?? null,
 		end: (frontmatter.end as string) ?? null,
 		recurrence: (frontmatter.recurrence as string) ?? null,
+		parent: (frontmatter.parent as string) ?? null,
 		tags: toStringArray(frontmatter.tags),
 		dateCreated: (frontmatter.dateCreated as string) ?? null,
 		dateModified: (frontmatter.dateModified as string) ?? null,
