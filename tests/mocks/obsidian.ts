@@ -18,3 +18,12 @@ export class TFile { path = ""; extension = "md"; basename = ""; }
 export class TFolder { children: any[] = []; }
 export class Notice { constructor(_msg: string) {} }
 export class Scope { register() {} }
+export class BasesView { constructor(_controller: any) {} }
+export class QueryController {}
+export class AbstractInputSuggest<T> {
+	constructor(_app: any, _inputEl: any) {}
+	setValue(_value: string) {}
+	getValue() { return ""; }
+	close() {}
+}
+export function setIcon(_el: any, _icon: string) {}
