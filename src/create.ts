@@ -134,6 +134,14 @@ export class CreateTaskModal extends Modal {
 
 		buttonBar.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 
+		// Ctrl/Cmd+Enter anywhere in the modal triggers the default save action
+		contentEl.addEventListener("keydown", (e) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+				e.preventDefault();
+				this.submit(this.defaultAction);
+			}
+		});
+
 		setTimeout(() => this.editor?.focus(), 50);
 	}
 
