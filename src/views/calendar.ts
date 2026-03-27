@@ -236,6 +236,19 @@ export class CalendarView extends BasesView {
 		const clickedDate = moment(event.start as Date);
 		const dateStr = clickedDate.format("YYYY-MM-DD");
 
+		// Check if the source template itself is on this date
+		const sourceFile = this.app.vault.getAbstractFileByPath(sourceFilePath);
+		if (!(sourceFile instanceof TFile)) return;
+
+		const sourceCache = this.app.metadataCache.getFileCache(sourceFile);
+		const sourceFmCheck = sourceCache?.frontmatter ?? {};
+		const sourceAnchor = sourceFmCheck.recurrence_anchor || "start";
+		const sourceDate = sourceFmCheck[sourceAnchor] || sourceFmCheck.start || sourceFmCheck.due || null;
+		if (sourceDate && moment(sourceDate).format("YYYY-MM-DD") === dateStr) {
+			new EditTaskModal(this.app, sourceFile, this.plugin.store).open();
+			return;
+		}
+
 		// Check if a materialized file already exists for this date
 		const existing = this.findMaterializedFile(sourceFilePath, dateStr);
 		if (existing) {
@@ -244,15 +257,11 @@ export class CalendarView extends BasesView {
 		}
 
 		// Materialize: read template and create a new task file
-		const sourceFile = this.app.vault.getAbstractFileByPath(sourceFilePath);
-		if (!(sourceFile instanceof TFile)) return;
-
-		const cache = this.app.metadataCache.getFileCache(sourceFile);
-		const sourceFm = cache?.frontmatter ?? {};
+		const sourceFm = sourceFmCheck;
 		const sourceContent = await this.app.vault.read(sourceFile);
 
 		// Extract body (everything after frontmatter)
-		const fmEnd = cache?.frontmatterPosition?.end?.line ?? 0;
+		const fmEnd = sourceCache?.frontmatterPosition?.end?.line ?? 0;
 		const lines = sourceContent.split("\n");
 		const body = lines.slice(fmEnd + 1).join("\n").trim();
 
