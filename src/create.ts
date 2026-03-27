@@ -1,8 +1,10 @@
-import { AbstractInputSuggest, App, Menu, Modal, moment, setIcon } from "obsidian";
+import { App, Menu, Modal, moment, setIcon } from "obsidian";
 import { Extension } from "@codemirror/state";
 import { EmbeddableEditor } from "./editor";
 import { ParsedTask, parseTaskInput } from "./nlp";
 import { TaskStore } from "./store";
+import { AfterCreateAction } from "./settings";
+import { TaskSuggest } from "./suggest";
 
 export interface TaskFormData {
 	parsed: ParsedTask;
@@ -17,7 +19,9 @@ export interface TaskFormData {
 
 export class CreateTaskModal extends Modal {
 	private editor: EmbeddableEditor | null = null;
-	private onSubmit: (data: TaskFormData) => void;
+	private onSubmit: (data: TaskFormData, action: AfterCreateAction) => void;
+	private defaultAction: AfterCreateAction;
+	private onActionChange: (action: AfterCreateAction) => void;
 	private extensions: Extension[];
 
 	// UI elements
@@ -47,10 +51,19 @@ export class CreateTaskModal extends Modal {
 
 	private store: TaskStore;
 
-	constructor(app: App, extensions: Extension[], store: TaskStore, onSubmit: (data: TaskFormData) => void) {
+	constructor(
+		app: App,
+		extensions: Extension[],
+		store: TaskStore,
+		defaultAction: AfterCreateAction,
+		onActionChange: (action: AfterCreateAction) => void,
+		onSubmit: (data: TaskFormData, action: AfterCreateAction) => void,
+	) {
 		super(app);
 		this.extensions = extensions;
 		this.store = store;
+		this.defaultAction = defaultAction;
+		this.onActionChange = onActionChange;
 		this.onSubmit = onSubmit;
 	}
 
@@ -66,7 +79,7 @@ export class CreateTaskModal extends Modal {
 			placeholder: "Buy groceries tomorrow at 3pm @home #errands +[[Project]]",
 			cls: "doomd-task-input",
 			extensions: this.extensions,
-			onSubmit: () => this.submit(),
+			onSubmit: () => this.submit(this.defaultAction),
 			onEscape: () => this.close(),
 			onChange: (value) => this.updatePreview(value),
 		});
@@ -87,8 +100,38 @@ export class CreateTaskModal extends Modal {
 
 		// Buttons
 		const buttonBar = contentEl.createDiv({ cls: "doomd-button-bar" });
-		const saveBtn = buttonBar.createEl("button", { text: "Save", cls: "mod-cta" });
-		saveBtn.addEventListener("click", () => this.submit());
+
+		const saveGroup = buttonBar.createDiv({ cls: "doomd-save-group" });
+		const saveBtn = saveGroup.createEl("button", {
+			text: this.getSaveLabel(this.defaultAction),
+			cls: "mod-cta doomd-save-main",
+		});
+		saveBtn.addEventListener("click", () => this.submit(this.defaultAction));
+
+		const chevronBtn = saveGroup.createEl("button", { cls: "mod-cta doomd-save-chevron" });
+		setIcon(chevronBtn, "chevron-down");
+		chevronBtn.addEventListener("click", (e) => {
+			const menu = new Menu();
+			const actions: { action: AfterCreateAction; label: string }[] = [
+				{ action: "save", label: "Save" },
+				{ action: "save-tab", label: "Save & open in new tab" },
+				{ action: "save-here", label: "Save & open here" },
+			];
+			for (const { action, label } of actions) {
+				menu.addItem((item) => {
+					item.setTitle(label);
+					if (action === this.defaultAction) item.setIcon("check");
+					item.onClick(() => {
+						this.defaultAction = action;
+						this.onActionChange(action);
+						saveBtn.setText(this.getSaveLabel(action));
+						this.submit(action);
+					});
+				});
+			}
+			menu.showAtMouseEvent(e);
+		});
+
 		buttonBar.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 
 		setTimeout(() => this.editor?.focus(), 50);
@@ -155,7 +198,7 @@ export class CreateTaskModal extends Modal {
 	// --- Status menu ---
 	private showStatusMenu(e: MouseEvent) {
 		const menu = new Menu();
-		const statuses = ["inbox", "next", "active", "waiting", "someday", "done"];
+		const statuses = ["inbox", "next", "active", "waiting", "someday", "done", "cancelled", "event", "meeting"];
 
 		for (const s of statuses) {
 			menu.addItem((item) => {
@@ -208,7 +251,7 @@ export class CreateTaskModal extends Modal {
 		const statusField = this.detailsEl.createDiv({ cls: "doomd-field" });
 		statusField.createEl("span", { text: "Status", cls: "doomd-field-label" });
 		this.statusSelect = statusField.createEl("select");
-		for (const s of ["inbox", "next", "active", "waiting", "someday", "done"]) {
+		for (const s of ["inbox", "next", "active", "waiting", "someday", "done", "cancelled", "event", "meeting"]) {
 			this.statusSelect.createEl("option", { text: s, value: s });
 		}
 		this.statusSelect.addEventListener("change", () => {
@@ -366,7 +409,7 @@ export class CreateTaskModal extends Modal {
 	}
 
 	// --- Submit ---
-	private submit() {
+	private submit(action: AfterCreateAction) {
 		const value = this.editor?.value.trim() ?? "";
 		if (!value) return;
 
@@ -384,8 +427,16 @@ export class CreateTaskModal extends Modal {
 			endOverride: this.endOverride,
 			recurrenceOverride: this.recurrenceOverride,
 			parentOverride: this.parentOverride,
-		});
+		}, action);
 		this.close();
+	}
+
+	private getSaveLabel(action: AfterCreateAction): string {
+		switch (action) {
+			case "save": return "Save";
+			case "save-tab": return "Save & open tab";
+			case "save-here": return "Save & open here";
+		}
 	}
 
 	onClose() {
@@ -474,36 +525,7 @@ class DateTimePickerModal extends Modal {
 	}
 }
 
-// --- Task Suggest ---
-class TaskSuggest extends AbstractInputSuggest<{ title: string; link: string }> {
-	private store: TaskStore;
-	private onPick: (value: string) => void;
 
-	constructor(app: App, inputEl: HTMLInputElement, store: TaskStore, onPick: (value: string) => void) {
-		super(app, inputEl);
-		this.store = store;
-		this.onPick = onPick;
-	}
-
-	getSuggestions(query: string): { title: string; link: string }[] {
-		const lower = query.toLowerCase();
-		return this.store
-			.getAll()
-			.map((t) => ({ title: t.title, link: `[[${t.title}]]` }))
-			.filter((t) => t.title.toLowerCase().includes(lower))
-			.slice(0, 20);
-	}
-
-	renderSuggestion(item: { title: string; link: string }, el: HTMLElement): void {
-		el.setText(item.title);
-	}
-
-	selectSuggestion(item: { title: string; link: string }, _evt: MouseEvent | KeyboardEvent): void {
-		this.setValue(item.link);
-		this.onPick(item.link);
-		this.close();
-	}
-}
 
 // --- Helpers ---
 export function generateTaskContent(data: TaskFormData): string {

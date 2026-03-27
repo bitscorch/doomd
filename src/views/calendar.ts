@@ -6,6 +6,7 @@ import interactionPlugin, { EventResizeDoneArg } from "@fullcalendar/interaction
 import rrulePlugin from "@fullcalendar/rrule";
 import DoomdPlugin from "../main";
 import { sanitizeFilename, ensureFolder } from "../create";
+import { EditTaskModal } from "./edit-modal";
 
 const STATUS_COLORS: Record<string, string> = {
 	inbox: "var(--text-muted)",
@@ -14,6 +15,9 @@ const STATUS_COLORS: Record<string, string> = {
 	waiting: "var(--color-yellow)",
 	someday: "var(--color-purple)",
 	done: "var(--text-faint)",
+	cancelled: "var(--text-faint)",
+	event: "var(--color-cyan)",
+	meeting: "var(--color-orange)",
 };
 
 /**
@@ -105,7 +109,7 @@ export class CalendarView extends BasesView {
 					const filePath = info.event.extendedProps.filePath as string;
 					const file = this.app.vault.getAbstractFileByPath(filePath);
 					if (file instanceof TFile) {
-						this.app.workspace.getLeaf(false).openFile(file);
+						new EditTaskModal(this.app, file, this.plugin.store).open();
 					}
 				}
 			},
@@ -233,7 +237,7 @@ export class CalendarView extends BasesView {
 		// Check if a materialized file already exists for this date
 		const existing = this.findMaterializedFile(sourceFilePath, dateStr);
 		if (existing) {
-			await this.app.workspace.getLeaf(false).openFile(existing);
+			new EditTaskModal(this.app, existing, this.plugin.store).open();
 			return;
 		}
 
@@ -312,7 +316,7 @@ export class CalendarView extends BasesView {
 
 		const file = await this.app.vault.create(path, newLines.join("\n"));
 		new Notice(`Created task: ${sourceTitle} (${dateStr})`);
-		await this.app.workspace.getLeaf(false).openFile(file);
+		new EditTaskModal(this.app, file, this.plugin.store).open();
 	}
 
 	private findMaterializedFile(sourceFilePath: string, dateStr: string): TFile | null {

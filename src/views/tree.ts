@@ -1,4 +1,5 @@
 import { TFile, BasesView, QueryController, BasesEntry, setIcon } from "obsidian";
+import { EditTaskModal } from "./edit-modal";
 import DoomdPlugin from "../main";
 
 const STATUS_ICONS: Record<string, string> = {
@@ -8,6 +9,9 @@ const STATUS_ICONS: Record<string, string> = {
 	waiting: "pause-circle",
 	someday: "cloud",
 	done: "check-circle-2",
+	cancelled: "x-circle",
+	event: "calendar-heart",
+	meeting: "users",
 };
 
 const LINK_RE = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/;
@@ -165,7 +169,7 @@ export class TreeView extends BasesView {
 		const titleEl = row.createDiv({ cls: "doomd-tree-title" });
 		titleEl.setText(node.title);
 		titleEl.addEventListener("click", () => {
-			this.app.workspace.getLeaf(false).openFile(node.entry.file);
+			new EditTaskModal(this.app, node.entry.file, this.plugin.store).open();
 		});
 
 		// Status label

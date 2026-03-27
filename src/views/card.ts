@@ -10,6 +10,7 @@ export function renderTaskCard(
 	start: string | null,
 	projects: string[],
 	app: App,
+	onClick?: (file: TFile) => void,
 ): HTMLElement {
 	const card = container.createDiv({ cls: "doomd-kanban-card" });
 	card.setAttribute("draggable", "true");
@@ -36,7 +37,11 @@ export function renderTaskCard(
 	// Click to open
 	card.addEventListener("click", (e) => {
 		if ((e.target as HTMLElement).closest("a")) return; // don't intercept link clicks
-		app.workspace.getLeaf(false).openFile(file);
+		if (onClick) {
+			onClick(file);
+		} else {
+			app.workspace.getLeaf(false).openFile(file);
+		}
 	});
 
 	return card;

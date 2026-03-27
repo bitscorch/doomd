@@ -1,8 +1,10 @@
 import { App, TFile, BasesView, QueryController, BasesEntry } from "obsidian";
 import { renderTaskCard } from "./card";
+import { EditTaskModal } from "./edit-modal";
 import DoomdPlugin from "../main";
 
 const STATUS_ORDER = ["inbox", "next", "active", "waiting", "someday", "done"];
+const KANBAN_HIDDEN = new Set(["event", "meeting", "cancelled"]);
 
 export class KanbanView extends BasesView {
 	type = "doomdKanban";
@@ -40,6 +42,8 @@ export class KanbanView extends BasesView {
 			// Read directly from frontmatter on the entry object
 			const fm = (entry as any).frontmatter ?? {};
 			const status = fm.status || "inbox";
+			if (KANBAN_HIDDEN.has(status)) continue;
+
 			const start = fm.start || fm.due || null;
 			const projects = Array.isArray(fm.projects) ? fm.projects : [];
 
@@ -100,6 +104,7 @@ export class KanbanView extends BasesView {
 					task.start,
 					task.projects,
 					this.app,
+					(file) => new EditTaskModal(this.app, file, this.plugin.store).open(),
 				);
 
 				card.addEventListener("dragstart", (e) => {
