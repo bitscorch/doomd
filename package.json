@@ -36,6 +36,10 @@
 		"vitest": "^4.1.1"
 	},
 	"dependencies": {
+		"@fullcalendar/core": "^6.1.20",
+		"@fullcalendar/daygrid": "^6.1.20",
+		"@fullcalendar/interaction": "^6.1.20",
+		"@fullcalendar/timegrid": "^6.1.20",
 		"chrono-node": "^2.9.0",
 		"obsidian": "latest"
 	}

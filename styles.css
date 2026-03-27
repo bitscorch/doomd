@@ -275,6 +275,88 @@
 	opacity: 0.7;
 }
 
+/* Calendar */
+.doomd-calendar {
+	padding: 12px;
+}
+
+.doomd-calendar-container {
+	min-height: 400px;
+}
+
+/* FullCalendar theme overrides */
+.doomd-calendar .fc {
+	--fc-border-color: var(--background-modifier-border);
+	--fc-button-bg-color: var(--interactive-normal);
+	--fc-button-border-color: var(--background-modifier-border);
+	--fc-button-text-color: var(--text-normal);
+	--fc-button-hover-bg-color: var(--interactive-hover);
+	--fc-button-hover-border-color: var(--background-modifier-border);
+	--fc-button-active-bg-color: var(--interactive-accent);
+	--fc-button-active-border-color: var(--interactive-accent);
+	--fc-button-active-text-color: var(--text-on-accent);
+	--fc-today-bg-color: rgba(var(--interactive-accent-rgb), 0.08);
+	--fc-neutral-bg-color: var(--background-secondary);
+	--fc-page-bg-color: transparent;
+	--fc-now-indicator-color: var(--interactive-accent);
+	--fc-event-border-color: transparent;
+	font-family: var(--font-interface);
+	font-size: 0.9em;
+}
+
+.doomd-calendar .fc .fc-toolbar-title {
+	font-size: 1.2em;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.doomd-calendar .fc .fc-col-header-cell-cushion,
+.doomd-calendar .fc .fc-daygrid-day-number {
+	color: var(--text-muted);
+	text-decoration: none;
+	font-size: 0.85em;
+}
+
+.doomd-calendar .fc .fc-daygrid-day-number:hover {
+	color: var(--text-normal);
+}
+
+.doomd-calendar .fc .fc-event {
+	border-radius: 4px;
+	padding: 1px 4px;
+	cursor: pointer;
+	font-size: 0.85em;
+}
+
+.doomd-calendar .fc .fc-event:hover {
+	filter: brightness(1.1);
+}
+
+.doomd-calendar .fc .fc-timegrid-event {
+	border-radius: 4px;
+	padding: 2px 4px;
+}
+
+.doomd-calendar .fc .fc-button {
+	border-radius: 4px;
+	font-size: 0.85em;
+	padding: 4px 10px;
+	font-weight: 500;
+}
+
+.doomd-calendar .fc .fc-button:focus {
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.3);
+}
+
+.doomd-calendar .fc .fc-day-other .fc-daygrid-day-number {
+	opacity: 0.4;
+}
+
+.doomd-calendar .fc .fc-scrollgrid {
+	border-radius: 6px;
+	overflow: hidden;
+}
+
 /* Button bar */
 .doomd-button-bar {
 	display: flex;
