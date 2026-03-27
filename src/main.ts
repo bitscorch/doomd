@@ -125,10 +125,17 @@ export default class DoomdPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			(await this.loadData()) as Partial<DoomdSettings>
 		);
+		this.sanitizePaths();
 	}
 
 	async saveSettings() {
+		this.sanitizePaths();
 		await this.saveData(this.settings);
 		this.store.setFolder(this.settings.tasksFolder);
+	}
+
+	private sanitizePaths() {
+		this.settings.tasksFolder = this.settings.tasksFolder.replace(/\/+$/, "");
+		this.settings.projectsFolder = this.settings.projectsFolder.replace(/\/+$/, "");
 	}
 }
