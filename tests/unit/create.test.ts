@@ -7,7 +7,7 @@ vi.mock("../../src/editor", () => ({
 import { sanitizeFilename, generateTaskContent } from "../../src/create";
 import { ParsedTask } from "../../src/nlp";
 
-function makeData(overrides: Partial<{ parsed: Partial<ParsedTask>; raw: string; description: string; statusOverride: string | null; startOverride: string | null; endOverride: string | null; recurrenceOverride: string | null }> = {}) {
+function makeData(overrides: Partial<{ parsed: Partial<ParsedTask>; raw: string; description: string; statusOverride: string | null; startOverride: string | null; endOverride: string | null; recurrenceOverride: string | null; parentOverride: string | null }> = {}) {
 	const parsed: ParsedTask = {
 		title: "Test task",
 		projects: [],
@@ -26,6 +26,7 @@ function makeData(overrides: Partial<{ parsed: Partial<ParsedTask>; raw: string;
 		startOverride: overrides.startOverride ?? null,
 		endOverride: overrides.endOverride ?? null,
 		recurrenceOverride: overrides.recurrenceOverride ?? null,
+		parentOverride: overrides.parentOverride ?? null,
 	};
 }
 
@@ -150,5 +151,15 @@ describe("generateTaskContent", () => {
 		const content = generateTaskContent(makeData({ description: "" }));
 		const afterH1 = content.split("# Test task\n")[1];
 		expect(afterH1?.trim()).toBe("");
+	});
+
+	it("parent override adds parent to frontmatter", () => {
+		const content = generateTaskContent(makeData({ parentOverride: "[[Build website]]" }));
+		expect(content).toContain('parent: "[[Build website]]"');
+	});
+
+	it("no parent override means no parent field", () => {
+		const content = generateTaskContent(makeData());
+		expect(content).not.toContain("parent:");
 	});
 });

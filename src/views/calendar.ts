@@ -25,7 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
  * Stored: "FREQ=WEEKLY;BYDAY=MO"
  * Output: "DTSTART:20260327\nRRULE:FREQ=WEEKLY;BYDAY=MO"
  */
-function toRRuleString(recurrence: string, fallbackStart: string): string {
+export function toRRuleString(recurrence: string, fallbackStart: string): string {
 	const dtMatch = recurrence.match(/^DTSTART:([^;]+);(.+)$/);
 	if (dtMatch) {
 		return `DTSTART:${dtMatch[1]}\nRRULE:${dtMatch[2]}`;
@@ -34,7 +34,7 @@ function toRRuleString(recurrence: string, fallbackStart: string): string {
 	return `DTSTART:${dtstart}\nRRULE:${recurrence}`;
 }
 
-function computeDuration(start: string, end: string): string | undefined {
+export function computeDuration(start: string, end: string): string | undefined {
 	const s = moment(start);
 	const e = moment(end);
 	if (!s.isValid() || !e.isValid()) return undefined;
