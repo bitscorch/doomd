@@ -15,14 +15,14 @@ export class TaskStore {
 		this.tasksFolder = folder;
 	}
 
-	async loadAll(): Promise<void> {
+	loadAll(): void {
 		this.tasks.clear();
 		const folder = this.app.vault.getAbstractFileByPath(this.tasksFolder);
 		if (!(folder instanceof TFolder)) return;
 
 		const files = this.getMarkdownFiles(folder);
 		for (const file of files) {
-			await this.loadTask(file);
+			this.indexTask(file);
 		}
 	}
 
@@ -38,8 +38,22 @@ export class TaskStore {
 		return files;
 	}
 
+	/** Index a task from metadata cache only — no file I/O */
+	indexTask(file: TFile): void {
+		const cache = this.app.metadataCache.getFileCache(file);
+		const frontmatter = cache?.frontmatter ?? {};
+
+		// Get title from H1 heading in cache, or frontmatter, or filename
+		const h1 = cache?.headings?.find((h) => h.level === 1);
+		const title = h1?.heading ?? (frontmatter.title as string) ?? file.basename;
+
+		const task = parseTask(file.path, frontmatter, title);
+		this.tasks.set(file.path, task);
+	}
+
+	/** Full load with file content — only used when body text is needed */
 	async loadTask(file: TFile): Promise<void> {
-		const content = await this.app.vault.read(file);
+		const content = await this.app.vault.cachedRead(file);
 		const cache = this.app.metadataCache.getFileCache(file);
 		const frontmatter = cache?.frontmatter ?? {};
 
@@ -47,7 +61,11 @@ export class TaskStore {
 		const lines = content.split("\n");
 		const body = lines.slice(bodyStart + 1).join("\n").trim();
 
-		const task = parseTask(file.path, frontmatter, body);
+		const h1 = cache?.headings?.find((h) => h.level === 1);
+		const title = h1?.heading ?? (frontmatter.title as string) ?? file.basename;
+
+		const task = parseTask(file.path, frontmatter, title);
+		task.body = body;
 		this.tasks.set(file.path, task);
 	}
 
@@ -89,6 +107,6 @@ export class TaskStore {
 			fm[field] = value;
 		});
 
-		await this.loadTask(file);
+		this.indexTask(file);
 	}
 }

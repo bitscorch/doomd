@@ -14,10 +14,10 @@ export interface Task {
 	body: string;
 }
 
-export function parseTask(filePath: string, frontmatter: Record<string, unknown>, body: string): Task {
+export function parseTask(filePath: string, frontmatter: Record<string, unknown>, title: string): Task {
 	return {
 		filePath,
-		title: extractH1(body) ?? filePath.split("/").pop()?.replace(".md", "") ?? "",
+		title,
 		status: (frontmatter.status as string) ?? "inbox",
 		priority: (frontmatter.priority as string) ?? "normal",
 		projects: toStringArray(frontmatter.projects),
@@ -28,13 +28,8 @@ export function parseTask(filePath: string, frontmatter: Record<string, unknown>
 		tags: toStringArray(frontmatter.tags),
 		dateCreated: (frontmatter.dateCreated as string) ?? null,
 		dateModified: (frontmatter.dateModified as string) ?? null,
-		body,
+		body: "",
 	};
-}
-
-function extractH1(body: string): string | null {
-	const match = body.match(/^#\s+(.+)$/m);
-	return match && match[1] ? match[1].trim() : null;
 }
 
 function toStringArray(value: unknown): string[] {
