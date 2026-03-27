@@ -295,7 +295,7 @@
 	--fc-button-active-bg-color: var(--interactive-accent);
 	--fc-button-active-border-color: var(--interactive-accent);
 	--fc-button-active-text-color: var(--text-on-accent);
-	--fc-today-bg-color: rgba(var(--interactive-accent-rgb), 0.08);
+	--fc-today-bg-color: rgba(var(--interactive-accent-rgb), 0.12);
 	--fc-neutral-bg-color: var(--background-secondary);
 	--fc-page-bg-color: transparent;
 	--fc-now-indicator-color: var(--interactive-accent);
@@ -319,6 +319,19 @@
 
 .doomd-calendar .fc .fc-daygrid-day-number:hover {
 	color: var(--text-normal);
+}
+
+.doomd-calendar .fc .fc-day-today .fc-daygrid-day-number {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 700;
+	border-radius: 50%;
+	width: 24px;
+	height: 24px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin: 2px;
 }
 
 .doomd-calendar .fc .fc-event {
@@ -355,6 +368,10 @@
 .doomd-calendar .fc .fc-scrollgrid {
 	border-radius: 6px;
 	overflow: hidden;
+}
+
+.doomd-calendar .fc .fc-daygrid-day-frame {
+	min-height: 11em;
 }
 
 /* Tree */
