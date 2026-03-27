@@ -104,7 +104,7 @@ test.describe("task creation", () => {
 		expect(taskFile).toBeDefined();
 
 		const content = fs.readFileSync(path.join(TASK_DIR, taskFile!), "utf-8");
-		expect(content).toMatch(/due: \d{4}-\d{2}-\d{2}T15:00:00/);
+		expect(content).toMatch(/start: \d{4}-\d{2}-\d{2}T15:00:00/);
 	});
 
 	test("creates a task with all features combined", async () => {
@@ -126,7 +126,7 @@ test.describe("task creation", () => {
 		expect(content).toContain("[[PKM]]");
 		expect(content).toContain("  - urgent");
 		expect(content).toContain("  - work");
-		expect(content).toMatch(/due: \d{4}-\d{2}-\d{2}T/);
+		expect(content).toMatch(/start: \d{4}-\d{2}-\d{2}/);
 		expect(content).toContain("# Review docs tomorrow +[[PKM]] @work #urgent");
 	});
 
@@ -143,6 +143,54 @@ test.describe("task creation", () => {
 		const files = fs.readdirSync(TASK_DIR).filter((f) => f.endsWith(".md"));
 		const taskFile = files.find((f) => f.includes("This should not be created"));
 		expect(taskFile).toBeUndefined();
+	});
+
+	test("creates a task with parent via details panel", async () => {
+		const { page } = app;
+
+		// First create a parent task
+		await runCommand(page, "doomd: Create task");
+		await page.waitForTimeout(500);
+		await page.keyboard.type("Parent project task", { delay: 20 });
+		await page.waitForTimeout(200);
+		await page.keyboard.press("Control+Enter");
+		await page.waitForTimeout(1000);
+
+		// Now create a child task with parent set
+		await runCommand(page, "doomd: Create task");
+		await page.waitForTimeout(500);
+		await page.keyboard.type("Child subtask", { delay: 20 });
+		await page.waitForTimeout(200);
+
+		// Open details panel — click the chevron-down button
+		const expandBtn = page.locator('.doomd-action-icon[aria-label="Details"]');
+		await expandBtn.click();
+		await page.waitForTimeout(300);
+
+		// Type in the parent input and select from suggestions
+		const parentInput = page.locator('.doomd-details .doomd-field input[placeholder="Search for parent task..."]');
+		await parentInput.fill("Parent project");
+		await page.waitForTimeout(500);
+
+		// Select the suggestion
+		const suggestion = page.locator(".suggestion-item").first();
+		if (await suggestion.isVisible({ timeout: 2000 }).catch(() => false)) {
+			await suggestion.click();
+			await page.waitForTimeout(300);
+		}
+
+		// Click Save button instead of Ctrl+Enter (focus may not be in editor)
+		const saveBtn = page.locator('.doomd-create-modal button.mod-cta:has-text("Save")');
+		await saveBtn.click();
+		await page.waitForTimeout(1000);
+
+		const files = fs.readdirSync(TASK_DIR).filter((f) => f.endsWith(".md"));
+		const taskFile = files.find((f) => f.includes("Child subtask"));
+		expect(taskFile).toBeDefined();
+
+		const content = fs.readFileSync(path.join(TASK_DIR, taskFile!), "utf-8");
+		expect(content).toContain("parent:");
+		expect(content).toContain("Parent project task");
 	});
 
 	test("includes timezone in timestamps", async () => {
