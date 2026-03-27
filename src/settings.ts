@@ -1,14 +1,18 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import DoomdPlugin from "./main";
 
+export type AfterCreateAction = "save" | "save-tab" | "save-here";
+
 export interface DoomdSettings {
 	tasksFolder: string;
 	projectsFolder: string;
+	afterCreateAction: AfterCreateAction;
 }
 
 export const DEFAULT_SETTINGS: DoomdSettings = {
 	tasksFolder: "task",
 	projectsFolder: "proj",
+	afterCreateAction: "save",
 };
 
 export class DoomdSettingTab extends PluginSettingTab {
@@ -45,6 +49,21 @@ export class DoomdSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.projectsFolder)
 					.onChange(async (value) => {
 						this.plugin.settings.projectsFolder = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("After creating a task")
+			.setDesc("What to do after saving a new task")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("save", "Just save")
+					.addOption("save-tab", "Save & open in new tab")
+					.addOption("save-here", "Save & open in current tab")
+					.setValue(this.plugin.settings.afterCreateAction)
+					.onChange(async (value) => {
+						this.plugin.settings.afterCreateAction = value as AfterCreateAction;
 						await this.plugin.saveSettings();
 					})
 			);

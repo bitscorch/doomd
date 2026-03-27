@@ -448,6 +448,9 @@
 .doomd-tree-status-waiting .doomd-tree-status { color: var(--color-yellow); }
 .doomd-tree-status-someday .doomd-tree-status { color: var(--color-purple); }
 .doomd-tree-status-done .doomd-tree-status { color: var(--text-faint); }
+.doomd-tree-status-cancelled .doomd-tree-status { color: var(--text-faint); }
+.doomd-tree-status-event .doomd-tree-status { color: var(--color-cyan); }
+.doomd-tree-status-meeting .doomd-tree-status { color: var(--color-orange); }
 
 .doomd-tree-title {
 	flex: 1;
@@ -463,7 +466,8 @@
 	color: var(--interactive-accent);
 }
 
-.doomd-tree-status-done .doomd-tree-title {
+.doomd-tree-status-done .doomd-tree-title,
+.doomd-tree-status-cancelled .doomd-tree-title {
 	color: var(--text-faint);
 	text-decoration: line-through;
 }
@@ -508,6 +512,70 @@
 .doomd-tree-checkbox-text.checked {
 	color: var(--text-faint);
 	text-decoration: line-through;
+}
+
+/* Split save button */
+.doomd-save-group {
+	display: flex;
+}
+
+.doomd-save-main {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.doomd-save-chevron {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	border-left: 1px solid rgba(0, 0, 0, 0.15);
+	padding: 4px 6px;
+	display: flex;
+	align-items: center;
+}
+
+.doomd-save-chevron svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* Edit modal */
+.doomd-edit-modal {
+	padding: 1em;
+}
+
+.doomd-edit-modal h3 {
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+.doomd-edit-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.doomd-edit-body {
+	margin-bottom: 12px;
+}
+
+.doomd-edit-body-label {
+	font-size: 0.8em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	letter-spacing: 0.05em;
+	margin-bottom: 4px;
+}
+
+.doomd-edit-body-text {
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: 6px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	white-space: pre-wrap;
+	max-height: 200px;
+	overflow-y: auto;
 }
 
 /* Button bar */
