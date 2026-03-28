@@ -20,29 +20,29 @@ export function parseTaskInput(input: string): ParsedTask {
 
 	let title = input;
 
-	// Extract +[[project]] or +project
-	const projectWikiRegex = /\+\[\[([^\]]+)\]\]/g;
+	// Extract +[[project]] or +project (only when preceded by whitespace or at start)
+	const projectWikiRegex = /(?<=\s|^)\+\[\[([^\]]+)\]\]/g;
 	let match: RegExpExecArray | null;
 	while ((match = projectWikiRegex.exec(input)) !== null) {
 		projects.push(`[[${match[1]}]]`);
 	}
 	title = title.replace(projectWikiRegex, "");
 
-	const projectPlainRegex = /\+(\S+)/g;
+	const projectPlainRegex = /(?<=\s|^)\+(\S+)/g;
 	while ((match = projectPlainRegex.exec(title)) !== null) {
 		projects.push(match[1]!);
 	}
 	title = title.replace(projectPlainRegex, "");
 
-	// Extract #tag
-	const tagRegex = /#(\S+)/g;
+	// Extract #tag (only when preceded by whitespace or at start)
+	const tagRegex = /(?<=\s|^)#(\S+)/g;
 	while ((match = tagRegex.exec(title)) !== null) {
 		tags.push(match[1]!);
 	}
 	title = title.replace(tagRegex, "");
 
-	// Extract @context
-	const contextRegex = /@(\S+)/g;
+	// Extract @context (only when preceded by whitespace or at start)
+	const contextRegex = /(?<=\s|^)@(\S+)/g;
 	while ((match = contextRegex.exec(title)) !== null) {
 		contexts.push(match[1]!);
 	}
