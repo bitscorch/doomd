@@ -128,6 +128,40 @@ describe("parseTaskInput", () => {
 		});
 	});
 
+	describe("mid-word symbols are not treated as triggers", () => {
+		it("does not extract @ from email addresses", () => {
+			const result = parseTaskInput("Email user@domain.com about update");
+			expect(result.contexts).toEqual([]);
+			expect(result.title).toBe("Email user@domain.com about update");
+		});
+
+		it("does not extract + from math expressions", () => {
+			const result = parseTaskInput("Calculate 2+2 for homework");
+			expect(result.projects).toEqual([]);
+			expect(result.title).toBe("Calculate 2+2 for homework");
+		});
+
+		it("does not extract # from C# mentions", () => {
+			const result = parseTaskInput("Learn C#basics");
+			expect(result.tags).toEqual([]);
+			expect(result.title).toBe("Learn C#basics");
+		});
+
+		it("still extracts triggers preceded by space", () => {
+			const result = parseTaskInput("Fix bug @work #urgent +project");
+			expect(result.contexts).toEqual(["work"]);
+			expect(result.tags).toEqual(["urgent"]);
+			expect(result.projects).toEqual(["project"]);
+			expect(result.title).toBe("Fix bug");
+		});
+
+		it("extracts triggers at start of string", () => {
+			const result = parseTaskInput("#urgent fix the bug");
+			expect(result.tags).toEqual(["urgent"]);
+			expect(result.title).toBe("fix the bug");
+		});
+	});
+
 	describe("combined input", () => {
 		it("parses full input with all triggers", () => {
 			const result = parseTaskInput("Buy groceries tomorrow at 3pm @home #errands +[[Shopping]]");
