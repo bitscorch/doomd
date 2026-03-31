@@ -5,7 +5,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { EventResizeDoneArg } from "@fullcalendar/interaction";
 import rrulePlugin from "@fullcalendar/rrule";
 import DoomdPlugin from "../main";
-import { sanitizeFilename, ensureFolder } from "../create";
+import { sanitizeFilename, ensureFolder, CreateTaskModal, generateTaskContent, generateFilename } from "../create";
+import { createDoomdAutocomplete } from "../autocomplete";
 import { EditTaskModal } from "./edit-modal";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -96,6 +97,7 @@ export class CalendarView extends BasesView {
 			},
 			events: this.buildEvents(),
 			editable: true,
+			selectable: true,
 			eventStartEditable: true,
 			eventDurationEditable: true,
 			height: "auto",
@@ -103,6 +105,46 @@ export class CalendarView extends BasesView {
 			slotLabelFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
 			eventTimeFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
 			firstDay: 1,
+
+			select: (info) => {
+				const allDay = info.allDay;
+				let initialStart: string | null = null;
+				let initialEnd: string | null = null;
+
+				if (allDay) {
+					initialStart = moment(info.start).format("YYYY-MM-DD");
+				} else {
+					initialStart = moment(info.start).format("YYYY-MM-DDTHH:mm:ssZ");
+					initialEnd = moment(info.end).format("YYYY-MM-DDTHH:mm:ssZ");
+				}
+
+				const extensions = createDoomdAutocomplete({ store: this.plugin.store });
+				new CreateTaskModal(
+					this.app,
+					extensions,
+					this.plugin.store,
+					this.plugin.settings.afterCreateAction,
+					async (action) => {
+						this.plugin.settings.afterCreateAction = action;
+						await this.plugin.saveSettings();
+					},
+					async (data, action) => {
+						await ensureFolder(this.app, this.plugin.settings.tasksFolder);
+						const filename = generateFilename(data.raw);
+						const path = `${this.plugin.settings.tasksFolder}/${filename}`;
+						const content = generateTaskContent(data);
+						const file = await this.app.vault.create(path, content);
+						new Notice(`Task created: ${data.parsed.title}`);
+						if (action === "save-tab") {
+							await this.app.workspace.getLeaf("tab").openFile(file);
+						} else if (action === "save-here") {
+							await this.app.workspace.getLeaf(false).openFile(file);
+						}
+					},
+					initialStart,
+					initialEnd,
+				).open();
+			},
 
 			eventClick: (info) => {
 				if (info.event.extendedProps.recurring) {

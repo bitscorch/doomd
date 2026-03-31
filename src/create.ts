@@ -58,6 +58,8 @@ export class CreateTaskModal extends Modal {
 		defaultAction: AfterCreateAction,
 		onActionChange: (action: AfterCreateAction) => void,
 		onSubmit: (data: TaskFormData, action: AfterCreateAction) => void,
+		initialStart?: string | null,
+		initialEnd?: string | null,
 	) {
 		super(app);
 		this.extensions = extensions;
@@ -65,6 +67,8 @@ export class CreateTaskModal extends Modal {
 		this.defaultAction = defaultAction;
 		this.onActionChange = onActionChange;
 		this.onSubmit = onSubmit;
+		if (initialStart) this.startOverride = initialStart;
+		if (initialEnd) this.endOverride = initialEnd;
 	}
 
 	onOpen() {
@@ -141,6 +145,12 @@ export class CreateTaskModal extends Modal {
 				this.submit(this.defaultAction);
 			}
 		});
+
+		// Show prefilled date state
+		if (this.startOverride) {
+			this.dateIcon.addClass("has-value");
+			this.updatePreview();
+		}
 
 		setTimeout(() => this.editor?.focus(), 50);
 	}
