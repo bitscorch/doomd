@@ -162,4 +162,83 @@ describe("generateTaskContent", () => {
 		const content = generateTaskContent(makeData());
 		expect(content).not.toContain("parent:");
 	});
+
+	it("default contexts are added when no parsed contexts", () => {
+		const content = generateTaskContent(makeData(), { status: "", contexts: "work,office", tags: "", projects: "" });
+		expect(content).toContain("contexts:");
+		expect(content).toContain("  - work");
+		expect(content).toContain("  - office");
+	});
+
+	it("default contexts merge with parsed contexts without duplicates", () => {
+		const content = generateTaskContent(
+			makeData({ parsed: { contexts: ["home", "work"] }, raw: "Test @home @work" }),
+			{ status: "", contexts: "work,errand", tags: "", projects: "" },
+		);
+		expect(content).toContain("  - work");
+		expect(content).toContain("  - errand");
+		expect(content).toContain("  - home");
+		expect(content.match(/- work/g)?.length).toBe(1);
+	});
+
+	it("default tags are added when no parsed tags", () => {
+		const content = generateTaskContent(makeData(), { status: "", contexts: "", tags: "daily,review", projects: "" });
+		expect(content).toContain("  - daily");
+		expect(content).toContain("  - review");
+	});
+
+	it("default tags merge with parsed tags without duplicates", () => {
+		const content = generateTaskContent(
+			makeData({ parsed: { tags: ["urgent", "daily"] }, raw: "Test #urgent #daily" }),
+			{ status: "", contexts: "", tags: "daily,work", projects: "" },
+		);
+		expect(content).toContain("  - urgent");
+		expect(content).toContain("  - daily");
+		expect(content).toContain("  - work");
+		expect(content.match(/- daily/g)?.length).toBe(1);
+	});
+
+	it("default projects are added when no parsed projects", () => {
+		const content = generateTaskContent(makeData(), { status: "", contexts: "", tags: "", projects: "[[Euromonitor]]" });
+		expect(content).toContain('  - "[[Euromonitor]]"');
+	});
+
+	it("default projects merge with parsed projects without duplicates", () => {
+		const content = generateTaskContent(
+			makeData({ parsed: { projects: ["[[Euromonitor]]"] }, raw: "Test +[[Euromonitor]]" }),
+			{ status: "", contexts: "", tags: "", projects: "[[Euromonitor]],[[PKMS]]" },
+		);
+		expect(content).toContain('  - "[[Euromonitor]]"');
+		expect(content).toContain('  - "[[PKMS]]"');
+		expect(content.match(/Euromonitor/g)?.length).toBe(2); // once in projects, once in raw heading
+	});
+
+	it("default status is used when no status override", () => {
+		const content = generateTaskContent(makeData(), { status: "next", contexts: "", tags: "", projects: "" });
+		expect(content).toContain("status: next");
+		expect(content).not.toContain("status: inbox");
+	});
+
+	it("status override takes precedence over default status", () => {
+		const content = generateTaskContent(
+			makeData({ statusOverride: "active" }),
+			{ status: "next", contexts: "", tags: "", projects: "" },
+		);
+		expect(content).toContain("status: active");
+		expect(content).not.toContain("status: next");
+	});
+
+	it("empty task defaults behave like no defaults", () => {
+		const content = generateTaskContent(makeData(), { status: "", contexts: "", tags: "", projects: "" });
+		expect(content).toContain("status: inbox");
+		expect(content).toContain("tags: []");
+		expect(content).toContain("projects: []");
+		expect(content).not.toContain("contexts:");
+	});
+
+	it("no task defaults parameter behaves like no defaults", () => {
+		const withDefaults = generateTaskContent(makeData(), { status: "", contexts: "", tags: "", projects: "" });
+		const without = generateTaskContent(makeData());
+		expect(withDefaults).toBe(without);
+	});
 });
