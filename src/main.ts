@@ -82,7 +82,7 @@ export default class DoomdPlugin extends Plugin {
 					await ensureFolder(this.app, this.settings.tasksFolder);
 					const filename = generateFilename(data.raw);
 					const path = `${this.settings.tasksFolder}/${filename}`;
-					const content = generateTaskContent(data);
+					const content = generateTaskContent(data, this.settings.taskDefaults);
 					const file = await this.app.vault.create(path, content);
 					new Notice(`Task created: ${data.parsed.title}`);
 					if (action === "save-tab") {

@@ -3,16 +3,32 @@ import DoomdPlugin from "./main";
 
 export type AfterCreateAction = "save" | "save-tab" | "save-here";
 
+export interface TaskDefaults {
+	status: string;
+	contexts: string;
+	tags: string;
+	projects: string;
+}
+
+export const DEFAULT_TASK_DEFAULTS: TaskDefaults = {
+	status: "",
+	contexts: "",
+	tags: "",
+	projects: "",
+};
+
 export interface DoomdSettings {
 	tasksFolder: string;
 	projectsFolder: string;
 	afterCreateAction: AfterCreateAction;
+	taskDefaults: TaskDefaults;
 }
 
 export const DEFAULT_SETTINGS: DoomdSettings = {
 	tasksFolder: "task",
 	projectsFolder: "proj",
 	afterCreateAction: "save",
+	taskDefaults: { ...DEFAULT_TASK_DEFAULTS },
 };
 
 export class DoomdSettingTab extends PluginSettingTab {
@@ -49,6 +65,58 @@ export class DoomdSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.projectsFolder)
 					.onChange(async (value) => {
 						this.plugin.settings.projectsFolder = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Default status")
+			.setDesc("Default status for new tasks (e.g. inbox, next, active)")
+			.addText((text) =>
+				text
+					.setPlaceholder("inbox")
+					.setValue(this.plugin.settings.taskDefaults.status)
+					.onChange(async (value) => {
+						this.plugin.settings.taskDefaults.status = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Default contexts")
+			.setDesc("Comma-separated contexts to add to every new task")
+			.addText((text) =>
+				text
+					.setPlaceholder("work,shop,pc")
+					.setValue(this.plugin.settings.taskDefaults.contexts)
+					.onChange(async (value) => {
+						this.plugin.settings.taskDefaults.contexts = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Default tags")
+			.setDesc("Comma-separated tags to add to every new task")
+			.addText((text) =>
+				text
+					.setPlaceholder("work,daily")
+					.setValue(this.plugin.settings.taskDefaults.tags)
+					.onChange(async (value) => {
+						this.plugin.settings.taskDefaults.tags = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Default projects")
+			.setDesc("Comma-separated projects to add to every new task")
+			.addText((text) =>
+				text
+					.setPlaceholder("[[Euromonitor]]")
+					.setValue(this.plugin.settings.taskDefaults.projects)
+					.onChange(async (value) => {
+						this.plugin.settings.taskDefaults.projects = value;
 						await this.plugin.saveSettings();
 					})
 			);

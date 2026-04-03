@@ -3,7 +3,7 @@ import { Extension } from "@codemirror/state";
 import { EmbeddableEditor } from "./editor";
 import { ParsedTask, parseTaskInput } from "./nlp";
 import { TaskStore } from "./store";
-import { AfterCreateAction } from "./settings";
+import { AfterCreateAction, TaskDefaults } from "./settings";
 import { TaskSuggest } from "./suggest";
 
 export interface TaskFormData {
@@ -546,19 +546,33 @@ class DateTimePickerModal extends Modal {
 
 
 // --- Helpers ---
-export function generateTaskContent(data: TaskFormData): string {
+function parseCSV(value: string): string[] {
+	return value.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function mergeUnique(defaults: string[], parsed: string[]): string[] {
+	return [...new Set([...defaults, ...parsed])];
+}
+
+export function generateTaskContent(data: TaskFormData, taskDefaults?: TaskDefaults): string {
 	const now = moment().format("YYYY-MM-DDTHH:mm:ssZ");
 	const { parsed, raw, description, statusOverride, startOverride, endOverride, recurrenceOverride, parentOverride } = data;
 
+	const defaultContexts = parseCSV(taskDefaults?.contexts ?? "");
+	const defaultTags = parseCSV(taskDefaults?.tags ?? "");
+	const defaultProjects = parseCSV(taskDefaults?.projects ?? "");
+	const defaultStatus = taskDefaults?.status || "";
+
 	const lines = [
 		"---",
-		`status: ${statusOverride ?? "inbox"}`,
+		`status: ${statusOverride ?? (defaultStatus || "inbox")}`,
 		"priority: normal",
 	];
 
-	if (parsed.projects.length > 0) {
+	const allProjects = mergeUnique(defaultProjects, parsed.projects);
+	if (allProjects.length > 0) {
 		lines.push("projects:");
-		for (const p of parsed.projects) {
+		for (const p of allProjects) {
 			lines.push(`  - "${p}"`);
 		}
 	} else {
@@ -589,18 +603,20 @@ export function generateTaskContent(data: TaskFormData): string {
 		lines.push(`parent: "${parentOverride}"`);
 	}
 
-	if (parsed.tags.length > 0) {
+	const allTags = mergeUnique(defaultTags, parsed.tags);
+	if (allTags.length > 0) {
 		lines.push("tags:");
-		for (const t of parsed.tags) {
+		for (const t of allTags) {
 			lines.push(`  - ${t}`);
 		}
 	} else {
 		lines.push("tags: []");
 	}
 
-	if (parsed.contexts.length > 0) {
+	const allContexts = mergeUnique(defaultContexts, parsed.contexts);
+	if (allContexts.length > 0) {
 		lines.push("contexts:");
-		for (const c of parsed.contexts) {
+		for (const c of allContexts) {
 			lines.push(`  - ${c}`);
 		}
 	}
