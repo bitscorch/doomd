@@ -105,6 +105,7 @@ export class TaskStore {
 
 		await this.app.fileManager.processFrontMatter(file, (fm) => {
 			fm[field] = value;
+			fm.dateModified = new Date().toISOString();
 		});
 
 		this.indexTask(file);
