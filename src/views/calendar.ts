@@ -107,6 +107,10 @@ export class CalendarView extends BasesView {
 			firstDay: 1,
 
 			select: (info) => {
+				if (info.jsEvent?.shiftKey) {
+					this.openDailyNote(moment(info.start));
+					return;
+				}
 				const allDay = info.allDay;
 				let initialStart: string | null = null;
 				let initialEnd: string | null = null;
@@ -383,6 +387,40 @@ export class CalendarView extends BasesView {
 			}
 		}
 		return null;
+	}
+
+	private getDailyNotesConfig(): { folder: string; format: string } {
+		const dailyNotes = (this.app as any).internalPlugins?.getPluginById?.("daily-notes");
+		const options = dailyNotes?.instance?.options ?? {};
+		return {
+			folder: options.folder || "",
+			format: options.format || "YYYY-MM-DD",
+		};
+	}
+
+	private async openDailyNote(date: ReturnType<typeof moment>): Promise<void> {
+		const { folder, format } = this.getDailyNotesConfig();
+		const filename = date.format(format);
+		const path = folder ? `${folder}/${filename}.md` : `${filename}.md`;
+
+		let file = this.app.vault.getAbstractFileByPath(path);
+		if (file instanceof TFile) {
+			await this.app.workspace.getLeaf("tab").openFile(file);
+		} else {
+			// Ensure parent directories exist
+			const parts = path.split("/");
+			parts.pop();
+			if (parts.length > 0) {
+				const dir = parts.join("/");
+				if (!this.app.vault.getAbstractFileByPath(dir)) {
+					await this.app.vault.createFolder(dir);
+				}
+			}
+			const created = await this.app.vault.create(path, "");
+			if (created instanceof TFile) {
+				await this.app.workspace.getLeaf("tab").openFile(created);
+			}
+		}
 	}
 
 	private async handleEventMove(filePath: string, event: any): Promise<void> {
