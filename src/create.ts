@@ -45,6 +45,7 @@ export class CreateTaskModal extends Modal {
 	private statusSelect: HTMLSelectElement | null = null;
 	private startDateInput: HTMLInputElement | null = null;
 	private startTimeInput: HTMLInputElement | null = null;
+	private endDateInput: HTMLInputElement | null = null;
 	private endTimeInput: HTMLInputElement | null = null;
 	private recurrenceInput: HTMLInputElement | null = null;
 	private parentInput: HTMLInputElement | null = null;
@@ -258,8 +259,13 @@ export class CreateTaskModal extends Modal {
 			if (!parsed.allDay && this.startTimeInput) {
 				this.startTimeInput.value = moment(parsed.start).format("HH:mm");
 			}
-			if (parsed.end && this.endTimeInput) {
-				this.endTimeInput.value = moment(parsed.end).format("HH:mm");
+			if (parsed.end) {
+				if (this.endDateInput) {
+					this.endDateInput.value = moment(parsed.end).format("YYYY-MM-DD");
+				}
+				if (!parsed.allDay && this.endTimeInput) {
+					this.endTimeInput.value = moment(parsed.end).format("HH:mm");
+				}
 			}
 		}
 	}
@@ -278,22 +284,20 @@ export class CreateTaskModal extends Modal {
 			this.updatePreview();
 		});
 
-		// Date
-		const dateField = this.detailsEl.createDiv({ cls: "doomd-field" });
-		dateField.createEl("span", { text: "Date", cls: "doomd-field-label" });
-		this.startDateInput = dateField.createEl("input", { type: "date" });
+		// Start date + time
+		const startRow = this.detailsEl.createDiv({ cls: "doomd-datetime-row" });
+		startRow.createEl("span", { text: "Start", cls: "doomd-field-label" });
+		this.startDateInput = startRow.createEl("input", { type: "date" });
 		this.startDateInput.addEventListener("change", () => this.rebuildFromForm());
-
-		// Start time
-		const startField = this.detailsEl.createDiv({ cls: "doomd-field" });
-		startField.createEl("span", { text: "Start time", cls: "doomd-field-label" });
-		this.startTimeInput = startField.createEl("input", { type: "time" });
+		this.startTimeInput = startRow.createEl("input", { type: "time" });
 		this.startTimeInput.addEventListener("change", () => this.rebuildFromForm());
 
-		// End time
-		const endField = this.detailsEl.createDiv({ cls: "doomd-field" });
-		endField.createEl("span", { text: "End time", cls: "doomd-field-label" });
-		this.endTimeInput = endField.createEl("input", { type: "time" });
+		// End date + time
+		const endRow = this.detailsEl.createDiv({ cls: "doomd-datetime-row" });
+		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
+		this.endDateInput = endRow.createEl("input", { type: "date" });
+		this.endDateInput.addEventListener("change", () => this.rebuildFromForm());
+		this.endTimeInput = endRow.createEl("input", { type: "time" });
 		this.endTimeInput.addEventListener("change", () => this.rebuildFromForm());
 
 		// Recurrence
@@ -324,6 +328,7 @@ export class CreateTaskModal extends Modal {
 	private rebuildFromForm() {
 		const dateVal = this.startDateInput?.value;
 		const startTime = this.startTimeInput?.value;
+		const endDateVal = this.endDateInput?.value;
 		const endTime = this.endTimeInput?.value;
 
 		if (!dateVal) {
@@ -332,12 +337,17 @@ export class CreateTaskModal extends Modal {
 		} else if (startTime) {
 			const [sh, sm] = startTime.split(":").map(Number);
 			this.startOverride = moment(dateVal).hour(sh ?? 0).minute(sm ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
+			const eDateVal = endDateVal || dateVal;
 			if (endTime) {
 				const [eh, em] = endTime.split(":").map(Number);
-				this.endOverride = moment(dateVal).hour(eh ?? 0).minute(em ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
+				this.endOverride = moment(eDateVal).hour(eh ?? 0).minute(em ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
 			} else {
 				this.endOverride = moment(this.startOverride).add(30, "minutes").format("YYYY-MM-DDTHH:mm:ssZ");
 			}
+		} else if (endDateVal) {
+			// All-day multi-day event
+			this.startOverride = dateVal;
+			this.endOverride = endDateVal;
 		} else {
 			this.startOverride = dateVal;
 			this.endOverride = null;
@@ -367,11 +377,20 @@ export class CreateTaskModal extends Modal {
 
 		if (start) {
 			if (allDay) {
-				this.addPreviewItem("calendar", `Date: ${start}`);
+				if (end && end !== start) {
+					this.addPreviewItem("calendar", `${start} → ${end}`);
+				} else {
+					this.addPreviewItem("calendar", `Date: ${start}`);
+				}
 			} else {
 				const startFmt = moment(start).format("YYYY-MM-DD HH:mm");
 				if (end) {
-					this.addPreviewItem("calendar", `${startFmt} → ${moment(end).format("HH:mm")}`);
+					const sameDay = moment(start).format("YYYY-MM-DD") === moment(end).format("YYYY-MM-DD");
+					if (sameDay) {
+						this.addPreviewItem("calendar", `${startFmt} → ${moment(end).format("HH:mm")}`);
+					} else {
+						this.addPreviewItem("calendar", `${startFmt} → ${moment(end).format("YYYY-MM-DD HH:mm")}`);
+					}
 				} else {
 					this.addPreviewItem("calendar", `Start: ${startFmt}`);
 				}
@@ -483,27 +502,27 @@ class DateTimePickerModal extends Modal {
 
 		contentEl.createEl("h3", { text: "Set date & time" });
 
-		// Date
-		const dateField = contentEl.createDiv({ cls: "doomd-field" });
-		dateField.createEl("span", { text: "Date", cls: "doomd-field-label" });
-		const dateInput = dateField.createEl("input", { type: "date" });
+		// Start date + time
+		const startRow = contentEl.createDiv({ cls: "doomd-datetime-row" });
+		startRow.createEl("span", { text: "Start", cls: "doomd-field-label" });
+		const dateInput = startRow.createEl("input", { type: "date" });
 		if (this.initialStart) {
 			dateInput.value = moment(this.initialStart).format("YYYY-MM-DD");
 		}
-
-		// Start time
-		const startField = contentEl.createDiv({ cls: "doomd-field" });
-		startField.createEl("span", { text: "Start time", cls: "doomd-field-label" });
-		const startTimeInput = startField.createEl("input", { type: "time" });
+		const startTimeInput = startRow.createEl("input", { type: "time" });
 		if (this.initialStart?.includes("T")) {
 			startTimeInput.value = moment(this.initialStart).format("HH:mm");
 		}
 
-		// End time
-		const endField = contentEl.createDiv({ cls: "doomd-field" });
-		endField.createEl("span", { text: "End time", cls: "doomd-field-label" });
-		const endTimeInput = endField.createEl("input", { type: "time" });
+		// End date + time
+		const endRow = contentEl.createDiv({ cls: "doomd-datetime-row" });
+		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
+		const endDateInput = endRow.createEl("input", { type: "date" });
 		if (this.initialEnd) {
+			endDateInput.value = moment(this.initialEnd).format("YYYY-MM-DD");
+		}
+		const endTimeInput = endRow.createEl("input", { type: "time" });
+		if (this.initialEnd?.includes("T")) {
 			endTimeInput.value = moment(this.initialEnd).format("HH:mm");
 		}
 
@@ -522,14 +541,18 @@ class DateTimePickerModal extends Modal {
 				const startM = moment(dateInput.value).hour(sh ?? 0).minute(sm ?? 0);
 				const startStr = startM.format("YYYY-MM-DDTHH:mm:ssZ");
 
+				const eDateVal = endDateInput.value || dateInput.value;
 				let endStr: string | null = null;
 				if (endTimeInput.value) {
 					const [eh, em] = endTimeInput.value.split(":").map(Number);
-					endStr = moment(dateInput.value).hour(eh ?? 0).minute(em ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
+					endStr = moment(eDateVal).hour(eh ?? 0).minute(em ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
 				} else {
 					endStr = startM.clone().add(30, "minutes").format("YYYY-MM-DDTHH:mm:ssZ");
 				}
 				this.onSelect(startStr, endStr);
+			} else if (endDateInput.value) {
+				// All-day multi-day event
+				this.onSelect(dateInput.value, endDateInput.value);
 			} else {
 				this.onSelect(dateInput.value, null);
 			}

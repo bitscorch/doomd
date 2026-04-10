@@ -40,19 +40,16 @@ export class EditTaskModal extends Modal {
 			this.updateFrontmatter("priority", val);
 		});
 
-		// Start date
+		// Start date + time
 		const startVal = fm.start || "";
 		const startDate = startVal ? moment(startVal).format("YYYY-MM-DD") : "";
 		const startTime = startVal?.includes("T") ? moment(startVal).format("HH:mm") : "";
 
-		const startDateField = fieldsEl.createDiv({ cls: "doomd-field" });
-		startDateField.createEl("span", { text: "Start date", cls: "doomd-field-label" });
-		const startDateInput = startDateField.createEl("input", { type: "date" });
+		const startRow = fieldsEl.createDiv({ cls: "doomd-datetime-row" });
+		startRow.createEl("span", { text: "Start", cls: "doomd-field-label" });
+		const startDateInput = startRow.createEl("input", { type: "date" });
 		startDateInput.value = startDate;
-
-		const startTimeField = fieldsEl.createDiv({ cls: "doomd-field" });
-		startTimeField.createEl("span", { text: "Start time", cls: "doomd-field-label" });
-		const startTimeInput = startTimeField.createEl("input", { type: "time" });
+		const startTimeInput = startRow.createEl("input", { type: "time" });
 		startTimeInput.value = startTime;
 
 		const updateStart = () => {
@@ -71,23 +68,37 @@ export class EditTaskModal extends Modal {
 		startDateInput.addEventListener("change", updateStart);
 		startTimeInput.addEventListener("change", updateStart);
 
-		// End time
+		// End date + time
 		const endVal = fm.end || "";
+		const endDate = endVal ? moment(endVal).format("YYYY-MM-DD") : "";
 		const endTime = endVal?.includes("T") ? moment(endVal).format("HH:mm") : "";
 
-		const endTimeField = fieldsEl.createDiv({ cls: "doomd-field" });
-		endTimeField.createEl("span", { text: "End time", cls: "doomd-field-label" });
-		const endTimeInput = endTimeField.createEl("input", { type: "time" });
+		const endRow = fieldsEl.createDiv({ cls: "doomd-datetime-row" });
+		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
+		const endDateInput = endRow.createEl("input", { type: "date" });
+		endDateInput.value = endDate;
+		const endTimeInput = endRow.createEl("input", { type: "time" });
 		endTimeInput.value = endTime;
-		endTimeInput.addEventListener("change", () => {
-			if (!startDateInput.value || !endTimeInput.value) {
+
+		const updateEnd = () => {
+			const eDateVal = endDateInput.value || startDateInput.value;
+			if (!eDateVal) {
 				this.updateFrontmatter("end", null);
 				return;
 			}
-			const [h, m] = endTimeInput.value.split(":").map(Number);
-			const val = moment(startDateInput.value).hour(h ?? 0).minute(m ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
-			this.updateFrontmatter("end", val);
-		});
+			if (endTimeInput.value) {
+				const [h, m] = endTimeInput.value.split(":").map(Number);
+				const val = moment(eDateVal).hour(h ?? 0).minute(m ?? 0).format("YYYY-MM-DDTHH:mm:ssZ");
+				this.updateFrontmatter("end", val);
+			} else if (endDateInput.value) {
+				// All-day multi-day: store end as date-only
+				this.updateFrontmatter("end", endDateInput.value);
+			} else {
+				this.updateFrontmatter("end", null);
+			}
+		};
+		endDateInput.addEventListener("change", updateEnd);
+		endTimeInput.addEventListener("change", updateEnd);
 
 		// Parent
 		const parentField = fieldsEl.createDiv({ cls: "doomd-field" });

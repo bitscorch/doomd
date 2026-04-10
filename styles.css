@@ -166,6 +166,33 @@
 	font-size: 0.9em;
 }
 
+.doomd-datetime-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.doomd-datetime-row .doomd-field-label {
+	min-width: 80px;
+}
+
+.doomd-datetime-row input {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 0.9em;
+}
+
+.doomd-datetime-row input[type="date"] {
+	flex: 2;
+}
+
+.doomd-datetime-row input[type="time"] {
+	flex: 1;
+}
+
 /* Kanban */
 .doomd-kanban {
 	display: flex;
