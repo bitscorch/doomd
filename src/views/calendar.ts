@@ -258,7 +258,12 @@ export class CalendarView extends BasesView {
 				};
 
 				if (fm.end) {
-					event.end = fm.end;
+					// FullCalendar treats all-day end as exclusive; stored end is inclusive
+					if (isAllDay && !fm.end.includes("T")) {
+						event.end = moment(fm.end).add(1, "day").format("YYYY-MM-DD");
+					} else {
+						event.end = fm.end;
+					}
 				}
 
 				events.push(event);
@@ -439,7 +444,7 @@ export class CalendarView extends BasesView {
 			}
 			if (newEnd) {
 				fm.end = allDay
-					? moment(newEnd).format("YYYY-MM-DD")
+					? moment(newEnd).subtract(1, "day").format("YYYY-MM-DD")
 					: moment(newEnd).format("YYYY-MM-DDTHH:mm");
 			}
 		});
