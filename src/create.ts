@@ -288,7 +288,10 @@ export class CreateTaskModal extends Modal {
 		const startRow = this.detailsEl.createDiv({ cls: "doomd-datetime-row" });
 		startRow.createEl("span", { text: "Start", cls: "doomd-field-label" });
 		this.startDateInput = startRow.createEl("input", { type: "date" });
-		this.startDateInput.addEventListener("change", () => this.rebuildFromForm());
+		this.startDateInput.addEventListener("change", () => {
+			if (this.endDateInput) this.endDateInput.min = this.startDateInput!.value || "";
+			this.rebuildFromForm();
+		});
 		this.startTimeInput = startRow.createEl("input", { type: "time" });
 		this.startTimeInput.addEventListener("change", () => this.rebuildFromForm());
 
@@ -296,6 +299,7 @@ export class CreateTaskModal extends Modal {
 		const endRow = this.detailsEl.createDiv({ cls: "doomd-datetime-row" });
 		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
 		this.endDateInput = endRow.createEl("input", { type: "date" });
+		this.endDateInput.min = this.startDateInput.value || "";
 		this.endDateInput.addEventListener("change", () => this.rebuildFromForm());
 		this.endTimeInput = endRow.createEl("input", { type: "time" });
 		this.endTimeInput.addEventListener("change", () => this.rebuildFromForm());
@@ -513,11 +517,15 @@ class DateTimePickerModal extends Modal {
 		if (this.initialStart?.includes("T")) {
 			startTimeInput.value = moment(this.initialStart).format("HH:mm");
 		}
+		dateInput.addEventListener("change", () => {
+			endDateInput.min = dateInput.value || "";
+		});
 
 		// End date + time
 		const endRow = contentEl.createDiv({ cls: "doomd-datetime-row" });
 		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
 		const endDateInput = endRow.createEl("input", { type: "date" });
+		endDateInput.min = dateInput.value || "";
 		if (this.initialEnd) {
 			endDateInput.value = moment(this.initialEnd).format("YYYY-MM-DD");
 		}

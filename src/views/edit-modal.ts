@@ -65,7 +65,10 @@ export class EditTaskModal extends Modal {
 				this.updateFrontmatter("start", startDateInput.value);
 			}
 		};
-		startDateInput.addEventListener("change", updateStart);
+		startDateInput.addEventListener("change", () => {
+			endDateInput.min = startDateInput.value || "";
+			updateStart();
+		});
 		startTimeInput.addEventListener("change", updateStart);
 
 		// End date + time
@@ -77,6 +80,7 @@ export class EditTaskModal extends Modal {
 		endRow.createEl("span", { text: "End", cls: "doomd-field-label" });
 		const endDateInput = endRow.createEl("input", { type: "date" });
 		endDateInput.value = endDate;
+		endDateInput.min = startDate;
 		const endTimeInput = endRow.createEl("input", { type: "time" });
 		endTimeInput.value = endTime;
 
