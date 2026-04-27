@@ -33,12 +33,30 @@ describe("toRRuleString", () => {
 		expect(result).toBe("DTSTART:20260115\nRRULE:FREQ=DAILY");
 	});
 
-	it("strips time portion from fallback start", () => {
+	it("merges time from anchor into fallback DTSTART", () => {
 		const result = toRRuleString("FREQ=DAILY", "2026-01-15T14:30:00+02:00");
-		expect(result).toBe("DTSTART:20260115\nRRULE:FREQ=DAILY");
+		expect(result).toBe("DTSTART:20260115T143000\nRRULE:FREQ=DAILY");
 	});
 
-	it("handles DTSTART with time component", () => {
+	it("merges time from anchor into stored date-only DTSTART", () => {
+		const result = toRRuleString(
+			"DTSTART:20260424;FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
+			"2026-04-24T13:30:00+03:00",
+		);
+		expect(result).toBe(
+			"DTSTART:20260424T133000\nRRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
+		);
+	});
+
+	it("preserves DTSTART time when recurrence already has one", () => {
+		const result = toRRuleString(
+			"DTSTART:20260405T140000Z;FREQ=WEEKLY",
+			"2026-04-05T09:00:00+02:00",
+		);
+		expect(result).toBe("DTSTART:20260405T140000Z\nRRULE:FREQ=WEEKLY");
+	});
+
+	it("handles DTSTART with time component when anchor has no time", () => {
 		const result = toRRuleString(
 			"DTSTART:20260405T140000Z;FREQ=WEEKLY",
 			"2026-04-05",

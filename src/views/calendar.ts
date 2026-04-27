@@ -22,20 +22,48 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 /**
+ * Extract local HHMMSS from an ISO datetime like "2026-04-24T13:30:00+03:00".
+ * Returns null if the input has no time component.
+ */
+function extractTime(iso: string): string | null {
+	const m = iso.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
+	if (!m) return null;
+	return `${m[1]}${m[2]}${m[3] ?? "00"}`;
+}
+
+/**
  * Convert stored recurrence format to rrule-compatible string.
  *
- * Stored: "DTSTART:20260405;FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=5"
- * Output: "DTSTART:20260405\nRRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=5"
+ * The anchor (start/due) carries the time-of-day; the recurrence string
+ * carries the date-based pattern. We merge them so occurrences fire at the
+ * right time of day rather than midnight.
  *
- * Stored: "FREQ=WEEKLY;BYDAY=MO"
- * Output: "DTSTART:20260327\nRRULE:FREQ=WEEKLY;BYDAY=MO"
+ * Stored recurrence "DTSTART:20260405;FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=5"
+ *   + anchor "2026-04-05T09:00:00+03:00"
+ *   → "DTSTART:20260405T090000\nRRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=5"
+ *
+ * Stored recurrence "FREQ=WEEKLY;BYDAY=MO"
+ *   + anchor "2026-03-27T14:30:00+02:00"
+ *   → "DTSTART:20260327T143000\nRRULE:FREQ=WEEKLY;BYDAY=MO"
+ *
+ * If the stored DTSTART already has a time (e.g. "20260405T140000Z"), it wins.
  */
 export function toRRuleString(recurrence: string, fallbackStart: string): string {
 	const dtMatch = recurrence.match(/^DTSTART:([^;]+);(.+)$/);
-	if (dtMatch) {
-		return `DTSTART:${dtMatch[1]}\nRRULE:${dtMatch[2]}`;
+	const anchorTime = extractTime(fallbackStart);
+
+	if (dtMatch && dtMatch[1] && dtMatch[2]) {
+		let dtstart = dtMatch[1];
+		if (!dtstart.includes("T") && anchorTime) {
+			dtstart = `${dtstart}T${anchorTime}`;
+		}
+		return `DTSTART:${dtstart}\nRRULE:${dtMatch[2]}`;
 	}
-	const dtstart = fallbackStart.replace(/-/g, "").replace(/T.*/, "");
+
+	let dtstart = fallbackStart.replace(/-/g, "").replace(/T.*/, "");
+	if (anchorTime) {
+		dtstart = `${dtstart}T${anchorTime}`;
+	}
 	return `DTSTART:${dtstart}\nRRULE:${recurrence}`;
 }
 
@@ -333,15 +361,22 @@ export class CalendarView extends BasesView {
 			newLines.push("projects: []");
 		}
 
-		// Date — use the clicked occurrence date
+		// Date — use the clicked occurrence date, preserving time-of-day from the template
 		const anchorField = sourceFm.recurrence_anchor || "start";
+		const templateStart: string | undefined = sourceFm.start;
+		const templateEnd: string | undefined = sourceFm.end;
+		const startTimeMatch = typeof templateStart === "string" ? templateStart.match(/T\d{2}:\d{2}[^\s]*/) : null;
+		const endTimeMatch = typeof templateEnd === "string" ? templateEnd.match(/T\d{2}:\d{2}[^\s]*/) : null;
+		const startValue = startTimeMatch ? `${dateStr}${startTimeMatch[0]}` : dateStr;
+		const endValue = endTimeMatch ? `${dateStr}${endTimeMatch[0]}` : "";
+
 		if (anchorField === "scheduled") {
 			newLines.push(`scheduled: ${dateStr}`);
 			newLines.push(`start:`);
 		} else {
-			newLines.push(`start: ${dateStr}`);
+			newLines.push(`start: ${startValue}`);
 		}
-		newLines.push(`end:`);
+		newLines.push(`end:${endValue ? ` ${endValue}` : ""}`);
 
 		// No recurrence on the instance
 		newLines.push(`recurrence:`);
