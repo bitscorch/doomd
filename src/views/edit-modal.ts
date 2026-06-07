@@ -1,4 +1,4 @@
-import { App, Modal, TFile, moment, setIcon } from "obsidian";
+import { App, Modal, Notice, TFile, moment, setIcon } from "obsidian";
 import { TaskStore } from "../store";
 import { TaskSuggest } from "../suggest";
 
@@ -167,6 +167,12 @@ export class EditTaskModal extends Modal {
 		// Button bar
 		const buttonBar = contentEl.createDiv({ cls: "doomd-button-bar" });
 
+		const deleteBtn = buttonBar.createEl("button", { cls: "mod-warning doomd-delete-btn" });
+		const deleteIcon = deleteBtn.createSpan();
+		setIcon(deleteIcon, "trash-2");
+		deleteBtn.appendText(" Delete");
+		deleteBtn.addEventListener("click", () => this.confirmDelete(title));
+
 		const goToBtn = buttonBar.createEl("button", { cls: "mod-cta" });
 		const goToIcon = goToBtn.createSpan();
 		setIcon(goToIcon, "external-link");
@@ -181,6 +187,20 @@ export class EditTaskModal extends Modal {
 
 	onClose() {
 		this.contentEl.empty();
+	}
+
+	private confirmDelete(title: string): void {
+		new ConfirmModal(
+			this.app,
+			"Delete task",
+			`Delete "${title}"? This moves the note to trash.`,
+			async () => {
+				await this.app.fileManager.trashFile(this.file);
+				this.store.removeTask(this.file.path);
+				new Notice(`Task deleted: ${title}`);
+				this.close();
+			},
+		).open();
 	}
 
 	private addDropdownField(
@@ -204,5 +224,35 @@ export class EditTaskModal extends Modal {
 		await this.app.fileManager.processFrontMatter(this.file, (fm) => {
 			fm[field] = value;
 		});
+	}
+}
+
+class ConfirmModal extends Modal {
+	private message: string;
+	private onConfirm: () => void | Promise<void>;
+
+	constructor(app: App, title: string, message: string, onConfirm: () => void | Promise<void>) {
+		super(app);
+		this.titleEl.setText(title);
+		this.message = message;
+		this.onConfirm = onConfirm;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl("p", { text: this.message });
+
+		const buttonBar = contentEl.createDiv({ cls: "doomd-button-bar" });
+		buttonBar.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
+
+		const confirmBtn = buttonBar.createEl("button", { text: "Delete", cls: "mod-warning" });
+		confirmBtn.addEventListener("click", async () => {
+			await this.onConfirm();
+			this.close();
+		});
+	}
+
+	onClose() {
+		this.contentEl.empty();
 	}
 }

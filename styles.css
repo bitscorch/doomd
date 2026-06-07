@@ -631,3 +631,7 @@
 	padding-top: 12px;
 	border-top: 1px solid var(--background-modifier-border);
 }
+
+.doomd-button-bar .doomd-delete-btn {
+	margin-right: auto;
+}
